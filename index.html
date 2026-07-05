@@ -224,8 +224,10 @@
       <a-light type="directional" position="0 5 5" intensity="0.5"></a-light>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        <!-- מסגרת אדומה לבדיקת זיהוי (מתווה של ריבוע) -->
-        <a-entity geometry="primitive: plane; width: 1; height: 1" material="color: red; wireframe: true; wireframeLinewidth: 5" position="0 0 0"></a-entity>
+        <!-- מסגרת בולטת מאד לבדיקת זיהוי -->
+        <a-entity geometry="primitive: plane; width: 1.2; height: 1.2" material="color: yellow; wireframe: true; wireframeLinewidth: 10" position="0 0 0"></a-entity>
+        <a-entity geometry="primitive: plane; width: 1.1; height: 1.1" material="color: white; wireframe: true; wireframeLinewidth: 5" position="0 0 0"></a-entity>
+        
         <a-box id="building-hitbox" position="0 0 0" width="1" height="2" depth="1" visible="false"></a-box>
       </a-entity>
     </a-scene>
@@ -473,7 +475,7 @@
 
             if(l.life <= 0) {
                 l.el.parentNode.removeChild(l.el);
-                enemyLasers.splice(i, 1);
+                enemyLasers.splice(l, 1);
             }
         }
       }
