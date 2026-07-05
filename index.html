@@ -6,6 +6,8 @@
     <!-- We use A-Frame and MindAR for robust image tracking -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <!-- Add the look-at component so the 2D spaceships always face the player -->
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     
     <style>
       body {
@@ -218,6 +220,9 @@
         <!-- Simple models using basic geometries -->
         <a-mixin id="laser-beam" geometry="primitive: cylinder; radius: 0.02; height: 1" material="color: #0ff; emissive: #0ff; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
         <a-mixin id="enemy-laser" geometry="primitive: cylinder; radius: 0.03; height: 0.5" material="color: #f00; emissive: #f00; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
+        
+        <!-- Add your uploaded spaceship image here. Change spaceship.png to match your exact file name -->
+        <img id="spaceship-img" src="spaceship.png" crossorigin="anonymous">
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -392,17 +397,16 @@
       function spawnEnemy() {
         if(!targetFound) return; // Only spawn if tracking
 
-        const enemyEl = document.createElement('a-entity');
-        
-        // Build the spaceship visually
-        enemyEl.innerHTML = `
-          <a-cone radius-bottom="0.2" height="0.6" color="#555" rotation="90 0 0"></a-cone>
-          <a-sphere radius="0.1" position="0 0 0.3" color="#f00" material="emissive: #f00; emissiveIntensity: 1"></a-sphere>
-        `;
+        // Use a-image for a 2D sprite instead of a 3D model
+        const enemyEl = document.createElement('a-image');
+        enemyEl.setAttribute('src', '#spaceship-img');
+        enemyEl.setAttribute('width', '1.2'); // Size of the ship
+        enemyEl.setAttribute('height', '1.2');
+        enemyEl.setAttribute('look-at', '[camera]'); // Makes the 2D image always face your phone
 
         // Spawn relative to the target anchor (the building)
-        // Spawn them in a hemisphere above the building
-        const radius = 5 + Math.random() * 3;
+        // Spawn them in a hemisphere above the building, CLOSER so they are visible
+        const radius = 3.5 + Math.random() * 1.5;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.random() * (Math.PI / 2.5); // Elevation
 
@@ -411,17 +415,13 @@
         const z = radius * Math.sin(phi) * Math.sin(theta);
 
         enemyEl.setAttribute('position', `${x} ${y} ${z}`);
-        
-        // Make it look at the center (0,0,0 local to anchor)
-        enemyEl.setAttribute('look-at', '#target-anchor'); 
-        // Note: look-at component might need to be implemented manually if not included, let's just rotate it manually in the loop
 
         targetAnchor.appendChild(enemyEl);
 
         enemies.push({
             el: enemyEl,
             health: 2,
-            speed: 0.5 + Math.random() * 0.5,
+            speed: 0.3 + Math.random() * 0.3,
             lastFire: performance.now() + Math.random() * 2000,
             fireRate: 2000 + Math.random() * 2000
         });
@@ -481,8 +481,8 @@
             let dir = new THREE.Vector3(-pos.x, -pos.y, -pos.z).normalize();
             pos.add(dir.multiplyScalar(e.speed * dt));
             
-            // Look at center
-            e.el.object3D.lookAt(0,0,0);
+            // We removed the lookAt(0,0,0) line here because the 'look-at' component 
+            // is now handling rotation to keep the sprite facing the camera.
 
             // Check if reached building
             if(pos.length() < 0.5) { // Hit radius of building
