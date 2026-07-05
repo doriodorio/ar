@@ -44,10 +44,13 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        <!-- מסגרת אדומה גדולה ומורחבת לבדיקה -->
-        <a-entity geometry="primitive: plane; width: 2; height: 2" material="color: red; wireframe: true; wireframeLinewidth: 15" position="0 0 0.1"></a-entity>
-        <a-text value="זיהוי תקין!" position="0 0.5 0.2" align="center" color="yellow" scale="0.5 0.5 0.5"></a-text>
-        <a-box id="building-hitbox" position="0 0 0" width="1" height="2" depth="1" visible="false"></a-box>
+        <!-- מסגרת בולטת שנמצאת ממש על המשטח -->
+        <a-entity 
+          geometry="primitive: plane; width: 1; height: 1" 
+          material="color: red; wireframe: true; wireframeLinewidth: 20; shader: flat" 
+          position="0 0 0.01">
+        </a-entity>
+        <a-text value="זיהוי פעיל!" position="0 0.6 0.01" align="center" color="#0ff" scale="0.8 0.8 0.8"></a-text>
       </a-entity>
     </a-scene>
 
