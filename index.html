@@ -383,15 +383,20 @@
         const enemyEl = document.createElement('a-image');
         enemyEl.setAttribute('src', '#spaceship-img');
         
-        // תיקון קריטי: הקטנת החלליות לגודל הגיוני ביחס לפוסטר (0.25 אומר רבע מרוחב הפוסטר)
-        enemyEl.setAttribute('width', '0.25'); 
-        enemyEl.setAttribute('height', '0.25');
+        // גודל החללית
+        enemyEl.setAttribute('width', '0.4'); 
+        enemyEl.setAttribute('height', '0.4');
         enemyEl.setAttribute('look-at', '[camera]'); // פונה תמיד למשתמש
 
-        // תיקון קריטי: מיקום - קרוב יותר ומוודא שזה נוצר מלפני הפוסטר (ציר Z חיובי)
-        const x = (Math.random() - 0.5) * 1.5; // מיקום אקראי שמאלה-ימינה
-        const y = (Math.random() - 0.5) * 1.5; // מיקום אקראי למעלה-למטה
-        const z = 0.2 + (Math.random() * 0.8); // מיקום בולט החוצה מהפוסטר אליך!
+        // תחימת אזור ההיווצרות לסביבה הקרובה של הפוסטר
+        // כיוון שרוחב הפוסטר הוא 1, נגדיר שהן ייווצרו בטווח של מינוס 1 עד 1
+        // (כלומר פי 2 מגודל הפוסטר הפיזי)
+        const x = (Math.random() - 0.5) * 2.0; 
+        const y = (Math.random() - 0.5) * 2.0; 
+        
+        // ציר העומק - החלליות "ירחפו" קרוב מאוד לפוסטר (0.1 עד 0.3)
+        // כדי שלא ייווצרו מאחורי השחקן בטעות!
+        const z = 0.1 + (Math.random() * 0.2); 
 
         enemyEl.setAttribute('position', `${x} ${y} ${z}`);
 
@@ -400,7 +405,7 @@
         enemies.push({
             el: enemyEl,
             health: 2,
-            speed: 0.15 + Math.random() * 0.2,
+            speed: 0.1 + Math.random() * 0.1, // מהירות מעט איטית יותר
             lastFire: performance.now() + Math.random() * 2000,
             fireRate: 2000 + Math.random() * 2000
         });
