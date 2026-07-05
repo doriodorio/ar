@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AR Tetris Building Defense</title>
+    <!-- We use A-Frame and MindAR for robust image tracking -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      /* UI Overlay Container */
+      #ui-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 10;
+        pointer-events: none; /* Let clicks pass through to the scene */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      /* Top Stats Bar */
+      #stats-bar {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px;
+        color: white;
+        text-shadow: 2px 2px 4px black;
+      }
+
+      .stat-box {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: 2px solid #0ff;
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+
+      #health-bar-container {
+        width: 150px;
+        height: 15px;
+        background: #333;
+        border: 2px solid white;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 5px;
+      }
+
+      #health-fill {
+        width: 100%;
+        height: 100%;
+        background: #0f0;
+        transition: width 0.2s, background-color 0.2s;
+      }
+
+      /* Center Sniper Scope */
+      #scope-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+
+      .scope-circle {
+        width: 80px;
+        height: 80px;
+        border: 2px solid rgba(0, 255, 255, 0.7);
+        border-radius: 50%;
+        position: relative;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3) inset, 0 0 15px rgba(0, 255, 255, 0.3);
+      }
+
+      .scope-line-h {
+        position: absolute;
+        top: 50%;
+        left: -15px;
+        width: 110px;
+        height: 2px;
+        background: rgba(0, 255, 255, 0.7);
+      }
+
+      .scope-line-v {
+        position: absolute;
+        left: 50%;
+        top: -15px;
+        height: 110px;
+        width: 2px;
+        background: rgba(0, 255, 255, 0.7);
+      }
+
+      .scope-dot {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 4px;
+        height: 4px;
+        background: red;
+        border-radius: 50%;
+      }
+
+      /* Damage Flash */
+      #damage-flash {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: red;
+        opacity: 0;
+        transition: opacity 0.1s;
+        pointer-events: none;
+        z-index: 5;
+      }
+
+      /* Screens */
+      .screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+        pointer-events: auto; /* Catch clicks */
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      h1 { color: #0ff; font-size: 2.5rem; text-transform: uppercase; margin-bottom: 10px; }
+      p { font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 30px; }
+      
+      button {
+        padding: 15px 40px;
+        font-size: 1.5rem;
+        background: #0ff;
+        color: black;
+        border: none;
+        border-radius: 30px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      }
+      button:active { transform: scale(0.95); }
+    </style>
+  </head>
+  <body>
+
+    <!-- UI Overlay -->
+    <div id="ui-container" class="hidden">
+      <div id="stats-bar">
+        <div class="stat-box">SCORE: <span id="score-val">0</span></div>
+        <div class="stat-box">
+          INTEGRITY
+          <div id="health-bar-container"><div id="health-fill"></div></div>
+        </div>
+      </div>
+      
+      <div id="scope-container">
+        <div class="scope-circle">
+          <div class="scope-line-h"></div>
+          <div class="scope-line-v"></div>
+          <div class="scope-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="damage-flash"></div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+      <h1>Protect the Tower</h1>
+      <p>1. Point your camera at the poster.<br>2. When the building is recognized, enemies will appear.<br>3. Keep enemies in your crosshair and TAP ANYWHERE to fire!</p>
+      <button id="start-btn">START CAMERA</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen hidden">
+      <h1 style="color: red;">CRITICAL FAILURE</h1>
+      <p>The building has been destroyed.</p>
+      <h2>FINAL SCORE: <span id="final-score-val">0</span></h2>
+      <button id="restart-btn" style="margin-top: 20px;">RETRY</button>
+    </div>
+
+
+    <!-- 
+      A-Frame Scene with MindAR 
+      Note: target.mind is the compiled version of your reference image.
+      You MUST compile for_game_2.jpg into targets.mind for this to work.
+    -->
+    <a-scene 
+      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiError: no;" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
+      
+      <a-assets>
+        <!-- Simple models using basic geometries -->
+        <a-mixin id="laser-beam" geometry="primitive: cylinder; radius: 0.02; height: 1" material="color: #0ff; emissive: #0ff; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
+        <a-mixin id="enemy-laser" geometry="primitive: cylinder; radius: 0.03; height: 0.5" material="color: #f00; emissive: #f00; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- The Target Entity. Everything inside here is anchored to the recognized image -->
+      <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
+        
+        <!-- We use the target anchor as the center of our world (the building) -->
+        <!-- We will dynamically add enemies here via Javascript -->
+        
+        <!-- Invisible hit box representing the building -->
+        <a-box id="building-hitbox" position="0 0 0" width="1" height="2" depth="1" visible="false"></a-box>
+
+      </a-entity>
+    </a-scene>
+
+    <script>
+      // --- Game State ---
+      let isPlaying = false;
+      let score = 0;
+      let health = 100;
+      let targetFound = false;
+      
+      let enemies = [];
+      let playerLasers = [];
+      let enemyLasers = [];
+      
+      let lastTime = performance.now();
+      let enemySpawnTimer = 0;
+      let enemySpawnInterval = 2500;
+
+      // --- DOM Elements ---
+      const sceneEl = document.querySelector('a-scene');
+      const targetAnchor = document.querySelector('#target-anchor');
+      const buildingHitbox = document.querySelector('#building-hitbox');
+      
+      const uiContainer = document.getElementById('ui-container');
+      const startScreen = document.getElementById('start-screen');
+      const gameOverScreen = document.getElementById('game-over-screen');
+      const scoreVal = document.getElementById('score-val');
+      const healthFill = document.getElementById('health-fill');
+      const damageFlash = document.getElementById('damage-flash');
+      const finalScoreVal = document.getElementById('final-score-val');
+
+      // --- MindAR Event Listeners ---
+      sceneEl.addEventListener("arReady", (event) => {
+        console.log("MindAR is ready");
+      });
+
+      targetAnchor.addEventListener("targetFound", event => {
+        console.log("Target found!");
+        targetFound = true;
+        if(isPlaying) uiContainer.classList.remove('hidden');
+      });
+
+      targetAnchor.addEventListener("targetLost", event => {
+        console.log("Target lost!");
+        targetFound = false;
+        uiContainer.classList.add('hidden'); // Hide UI if looking away
+      });
+
+      // --- UI Flow ---
+      document.getElementById('start-btn').addEventListener('click', () => {
+        startScreen.classList.add('hidden');
+        sceneEl.systems["mindar-image-system"].start(); // Start camera
+        startGame();
+      });
+
+      document.getElementById('restart-btn').addEventListener('click', () => {
+        gameOverScreen.classList.add('hidden');
+        startGame();
+      });
+
+      function startGame() {
+        score = 0;
+        health = 100;
+        enemySpawnInterval = 2500;
+        updateUI();
+        
+        // Cleanup existing entities
+        enemies.forEach(e => e.el.parentNode.removeChild(e.el));
+        playerLasers.forEach(l => l.el.parentNode.removeChild(l.el));
+        enemyLasers.forEach(l => l.el.parentNode.removeChild(l.el));
+        enemies = [];
+        playerLasers = [];
+        enemyLasers = [];
+
+        isPlaying = true;
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+        
+        if(targetFound) uiContainer.classList.remove('hidden');
+      }
+
+      function endGame() {
+        isPlaying = false;
+        uiContainer.classList.add('hidden');
+        gameOverScreen.classList.remove('hidden');
+        finalScoreVal.innerText = score;
+      }
+
+      function updateUI() {
+        scoreVal.innerText = score;
+        healthFill.style.width = health + '%';
+        if(health > 50) healthFill.style.background = '#0f0';
+        else if (health > 25) healthFill.style.background = '#ff0';
+        else healthFill.style.background = '#f00';
+      }
+
+      function takeDamage(amt) {
+        health -= amt;
+        if(health < 0) health = 0;
+        updateUI();
+        
+        damageFlash.style.opacity = 0.5;
+        setTimeout(() => damageFlash.style.opacity = 0, 100);
+
+        if(health <= 0) endGame();
+      }
+
+      // --- Interaction (Shooting) ---
+      // We listen on the window. Tapping anywhere fires from camera to center of screen
+      window.addEventListener('touchstart', (e) => {
+        if(!isPlaying || !targetFound || e.target.tagName === 'BUTTON') return;
+        e.preventDefault();
+        firePlayerLaser();
+      }, {passive: false});
+
+      window.addEventListener('mousedown', (e) => {
+        if(!isPlaying || !targetFound || e.target.tagName === 'BUTTON') return;
+        firePlayerLaser();
+      });
+
+      function firePlayerLaser() {
+        // A-Frame works by manipulating DOM elements that represent 3D objects
+        const laserEl = document.createElement('a-entity');
+        laserEl.setAttribute('mixin', 'laser-beam');
+        
+        // To make the laser shoot from the PHONE towards the center of the screen
+        // we actually need to attach it to the camera temporarily, get its world position/rotation,
+        // then attach it to the scene so it flies independently.
+        
+        const cameraEl = document.querySelector('a-camera');
+        const camWorldPos = new THREE.Vector3();
+        cameraEl.object3D.getWorldPosition(camWorldPos);
+        
+        const camWorldDir = new THREE.Vector3(0,0,-1);
+        camWorldDir.applyQuaternion(cameraEl.object3D.quaternion);
+        
+        // But since our whole game world is anchored to targetAnchor, 
+        // we need local coordinates relative to the target anchor.
+        // This is complex in A-Frame AR, so we'll simplify: 
+        // We know the camera is always at (0,0,0) in world space (MindAR moves the target, not camera).
+        
+        // Actually, MindAR moves the target anchor, keeping camera at 0,0,0.
+        // Let's add the laser to the scene (not the anchor) so it shoots straight from camera
+        laserEl.setAttribute('position', '0 -0.2 -0.5'); // Start slightly below camera
+        
+        // Aiming: it goes straight down the -Z axis of the camera
+        sceneEl.appendChild(laserEl);
+        
+        playerLasers.push({
+            el: laserEl,
+            pos: new THREE.Vector3(0, -0.2, -0.5),
+            dir: new THREE.Vector3(0, 0, -1),
+            speed: 15,
+            life: 2.0 // seconds
+        });
+      }
+
+      // --- Spawning Enemies ---
+      function spawnEnemy() {
+        if(!targetFound) return; // Only spawn if tracking
+
+        const enemyEl = document.createElement('a-entity');
+        
+        // Build the spaceship visually
+        enemyEl.innerHTML = `
+          <a-cone radius-bottom="0.2" height="0.6" color="#555" rotation="90 0 0"></a-cone>
+          <a-sphere radius="0.1" position="0 0 0.3" color="#f00" material="emissive: #f00; emissiveIntensity: 1"></a-sphere>
+        `;
+
+        // Spawn relative to the target anchor (the building)
+        // Spawn them in a hemisphere above the building
+        const radius = 5 + Math.random() * 3;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * (Math.PI / 2.5); // Elevation
+
+        const x = radius * Math.sin(phi) * Math.cos(theta);
+        const y = Math.abs(radius * Math.cos(phi)); // Ensure they are above (y > 0)
+        const z = radius * Math.sin(phi) * Math.sin(theta);
+
+        enemyEl.setAttribute('position', `${x} ${y} ${z}`);
+        
+        // Make it look at the center (0,0,0 local to anchor)
+        enemyEl.setAttribute('look-at', '#target-anchor'); 
+        // Note: look-at component might need to be implemented manually if not included, let's just rotate it manually in the loop
+
+        targetAnchor.appendChild(enemyEl);
+
+        enemies.push({
+            el: enemyEl,
+            health: 2,
+            speed: 0.5 + Math.random() * 0.5,
+            lastFire: performance.now() + Math.random() * 2000,
+            fireRate: 2000 + Math.random() * 2000
+        });
+      }
+
+      function fireEnemyLaser(enemyObj) {
+        const laserEl = document.createElement('a-entity');
+        laserEl.setAttribute('mixin', 'enemy-laser');
+        
+        // Get enemy local position
+        const pos = enemyObj.el.getAttribute('position');
+        laserEl.setAttribute('position', pos);
+        
+        targetAnchor.appendChild(laserEl);
+        
+        // Direction is from enemy to center (0,0,0)
+        const dir = new THREE.Vector3(-pos.x, -pos.y, -pos.z).normalize();
+        
+        // Orient laser
+        laserEl.object3D.lookAt(0,0,0);
+
+        enemyLasers.push({
+            el: laserEl,
+            pos: new THREE.Vector3(pos.x, pos.y, pos.z),
+            dir: dir,
+            speed: 3,
+            life: 3.0
+        });
+      }
+
+
+      // --- Main Game Loop ---
+      function gameLoop(time) {
+        if(!isPlaying) return;
+        requestAnimationFrame(gameLoop);
+
+        let dt = (time - lastTime) / 1000;
+        if(dt > 0.1) dt = 0.1;
+        lastTime = time;
+
+        if(!targetFound) return; // Pause logic if not tracking
+
+        // 1. Spawning
+        enemySpawnTimer += dt * 1000;
+        if(enemySpawnTimer > enemySpawnInterval) {
+            spawnEnemy();
+            enemySpawnTimer = 0;
+            if(enemySpawnInterval > 800) enemySpawnInterval -= 50; // Get harder
+        }
+
+        // 2. Update Enemies
+        for(let i = enemies.length - 1; i >= 0; i--) {
+            let e = enemies[i];
+            let pos = e.el.object3D.position;
+            
+            // Move to center
+            let dir = new THREE.Vector3(-pos.x, -pos.y, -pos.z).normalize();
+            pos.add(dir.multiplyScalar(e.speed * dt));
+            
+            // Look at center
+            e.el.object3D.lookAt(0,0,0);
+
+            // Check if reached building
+            if(pos.length() < 0.5) { // Hit radius of building
+                takeDamage(10);
+                e.el.parentNode.removeChild(e.el);
+                enemies.splice(i, 1);
+                continue;
+            }
+
+            // Fire laser
+            if(time > e.lastFire + e.fireRate) {
+                fireEnemyLaser(e);
+                e.lastFire = time;
+            }
+        }
+
+        // 3. Update Player Lasers (World Space)
+        for(let i = playerLasers.length - 1; i >= 0; i--) {
+            let l = playerLasers[i];
+            l.pos.add(l.dir.clone().multiplyScalar(l.speed * dt));
+            l.el.object3D.position.copy(l.pos);
+            l.life -= dt;
+
+            let hit = false;
+            
+            // Collision check: Player laser (world space) vs Enemies (local space)
+            // We need to convert enemy local pos to world pos to check distance
+            let laserWorldPos = l.pos;
+
+            for(let j = enemies.length - 1; j >= 0; j--) {
+                let e = enemies[j];
+                let enemyWorldPos = new THREE.Vector3();
+                e.el.object3D.getWorldPosition(enemyWorldPos);
+
+                if(laserWorldPos.distanceTo(enemyWorldPos) < 0.8) { // Hit radius
+                    hit = true;
+                    e.health--;
+                    
+                    if(e.health <= 0) {
+                        e.el.parentNode.removeChild(e.el);
+                        enemies.splice(j, 1);
+                        score += 100;
+                        updateUI();
+                    }
+                    break;
+                }
+            }
+
+            if(hit || l.life <= 0) {
+                l.el.parentNode.removeChild(l.el);
+                playerLasers.splice(i, 1);
+            }
+        }
+
+        // 4. Update Enemy Lasers (Local Space)
+        for(let i = enemyLasers.length - 1; i >= 0; i--) {
+            let l = enemyLasers[i];
+            l.pos.add(l.dir.clone().multiplyScalar(l.speed * dt));
+            l.el.object3D.position.copy(l.pos);
+            l.life -= dt;
+
+            // Check hit building (origin)
+            if(l.pos.length() < 0.5) {
+                takeDamage(5);
+                l.el.parentNode.removeChild(l.el);
+                enemyLasers.splice(i, 1);
+                continue;
+            }
+
+            if(l.life <= 0) {
+                l.el.parentNode.removeChild(l.el);
+                enemyLasers.splice(i, 1);
+            }
+        }
+      }
+
+    </script>
+  </body>
+</html>
