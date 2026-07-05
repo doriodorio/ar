@@ -7,8 +7,6 @@
     <!-- אנחנו משתמשים ב-A-Frame ו-MindAR לזיהוי תמונה יציב -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    <!-- הוספת רכיב look-at כדי שהחלליות תמיד יפנו למצלמה -->
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     
     <style>
       body {
@@ -224,22 +222,19 @@
         <a-mixin id="laser-beam" geometry="primitive: cylinder; radius: 0.02; height: 1" material="color: #0ff; emissive: #0ff; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
         <a-mixin id="enemy-laser" geometry="primitive: cylinder; radius: 0.03; height: 0.5" material="color: #f00; emissive: #f00; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
         
-        <!-- תמונת החללית מ-GitHub (חובה לוודא שהשם מדויק) -->
-        <img id="spaceship-img" src="spaceship.png" crossorigin="anonymous">
+        <!-- הסרנו את תמונת החללית לטובת כדורים אדומים כדי לבדוק גרפיקה -->
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- תאורה בסיסית כדי שהחלליות לא יהיו חשוכות -->
+      <!-- תאורה בסיסית -->
       <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
       <a-light type="directional" position="0 5 5" intensity="0.5"></a-light>
 
       <!-- מוקד המעקב - הכל כאן מעוגן לפוסטר -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        
         <!-- קובייה נסתרת המייצגת את מרכז המבנה (המטרה של האויבים) -->
         <a-box id="building-hitbox" position="0 0 0" width="1" height="2" depth="1" visible="false"></a-box>
-
       </a-entity>
     </a-scene>
 
@@ -376,26 +371,20 @@
         });
       }
 
-      // --- יצירת אויבים ---
+      // --- יצירת אויבים (עכשיו כדורים אדומים לבדיקה) ---
       function spawnEnemy() {
         if(!targetFound) return; 
 
-        const enemyEl = document.createElement('a-image');
-        enemyEl.setAttribute('src', '#spaceship-img');
-        
-        // גודל החללית
-        enemyEl.setAttribute('width', '0.4'); 
-        enemyEl.setAttribute('height', '0.4');
-        enemyEl.setAttribute('look-at', '[camera]'); // פונה תמיד למשתמש
+        // הפיכת האויב לכדור אדום ופשוט במקום תמונה
+        const enemyEl = document.createElement('a-sphere');
+        enemyEl.setAttribute('radius', '0.15'); 
+        enemyEl.setAttribute('color', '#ff0000'); 
 
         // תחימת אזור ההיווצרות לסביבה הקרובה של הפוסטר
-        // כיוון שרוחב הפוסטר הוא 1, נגדיר שהן ייווצרו בטווח של מינוס 1 עד 1
-        // (כלומר פי 2 מגודל הפוסטר הפיזי)
         const x = (Math.random() - 0.5) * 2.0; 
         const y = (Math.random() - 0.5) * 2.0; 
         
-        // ציר העומק - החלליות "ירחפו" קרוב מאוד לפוסטר (0.1 עד 0.3)
-        // כדי שלא ייווצרו מאחורי השחקן בטעות!
+        // ציר העומק - קרוב מאוד לפוסטר (0.1 עד 0.3)
         const z = 0.1 + (Math.random() * 0.2); 
 
         enemyEl.setAttribute('position', `${x} ${y} ${z}`);
@@ -405,7 +394,7 @@
         enemies.push({
             el: enemyEl,
             health: 2,
-            speed: 0.1 + Math.random() * 0.1, // מהירות מעט איטית יותר
+            speed: 0.1 + Math.random() * 0.1,
             lastFire: performance.now() + Math.random() * 2000,
             fireRate: 2000 + Math.random() * 2000
         });
@@ -449,7 +438,7 @@
         if(enemySpawnTimer > enemySpawnInterval) {
             spawnEnemy();
             enemySpawnTimer = 0;
-            if(enemySpawnInterval > 800) enemySpawnInterval -= 50; // המשחק נהיה קשה יותר
+            if(enemySpawnInterval > 800) enemySpawnInterval -= 50; 
         }
 
         // 2. עדכון מיקום אויבים
@@ -489,7 +478,7 @@
                 let enemyWorldPos = new THREE.Vector3();
                 e.el.object3D.getWorldPosition(enemyWorldPos);
 
-                if(laserWorldPos.distanceTo(enemyWorldPos) < 0.4) { // טווח פגיעה באויב
+                if(laserWorldPos.distanceTo(enemyWorldPos) < 0.4) { 
                     hit = true;
                     e.health--;
                     
