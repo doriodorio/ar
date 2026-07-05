@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="he" dir="rtl">
   <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AR Tetris Building Defense</title>
-    <!-- We use A-Frame and MindAR for robust image tracking -->
+    <title>הגנת AR על המבנה</title>
+    <!-- אנחנו משתמשים ב-A-Frame ו-MindAR לזיהוי תמונה יציב -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    <!-- Add the look-at component so the 2D spaceships always face the player -->
+    <!-- הוספת רכיב look-at כדי שהחלליות תמיד יפנו למצלמה -->
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     
     <style>
@@ -16,7 +17,7 @@
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       }
       
-      /* UI Overlay Container */
+      /* שכבת ממשק משתמש */
       #ui-container {
         position: absolute;
         top: 0;
@@ -24,19 +25,20 @@
         width: 100vw;
         height: 100vh;
         z-index: 10;
-        pointer-events: none; /* Let clicks pass through to the scene */
+        pointer-events: none; /* מאפשר ללחיצות לעבור לסצנה שמאחור */
         display: flex;
         flex-direction: column;
         justify-content: space-between;
       }
 
-      /* Top Stats Bar */
+      /* שורת סטטוס עליונה */
       #stats-bar {
         display: flex;
         justify-content: space-between;
         padding: 20px;
         color: white;
         text-shadow: 2px 2px 4px black;
+        direction: rtl;
       }
 
       .stat-box {
@@ -46,6 +48,7 @@
         border: 2px solid #0ff;
         font-size: 1.2rem;
         font-weight: bold;
+        text-align: center;
       }
 
       #health-bar-container {
@@ -65,7 +68,7 @@
         transition: width 0.2s, background-color 0.2s;
       }
 
-      /* Center Sniper Scope */
+      /* כוונת מרכזית */
       #scope-container {
         position: absolute;
         top: 50%;
@@ -112,7 +115,7 @@
         border-radius: 50%;
       }
 
-      /* Damage Flash */
+      /* הבהוב פגיעה */
       #damage-flash {
         position: absolute;
         top: 0;
@@ -126,7 +129,7 @@
         z-index: 5;
       }
 
-      /* Screens */
+      /* מסכים */
       .screen {
         position: absolute;
         top: 0;
@@ -141,14 +144,15 @@
         align-items: center;
         color: white;
         text-align: center;
-        pointer-events: auto; /* Catch clicks */
+        pointer-events: auto;
+        direction: rtl;
       }
 
       .hidden {
         display: none !important;
       }
 
-      h1 { color: #0ff; font-size: 2.5rem; text-transform: uppercase; margin-bottom: 10px; }
+      h1 { color: #0ff; font-size: 2.5rem; margin-bottom: 10px; }
       p { font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 30px; }
       
       button {
@@ -167,12 +171,12 @@
   </head>
   <body>
 
-    <!-- UI Overlay -->
+    <!-- שכבת ממשק המשתמש -->
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
-        <div class="stat-box">SCORE: <span id="score-val">0</span></div>
+        <div class="stat-box">ניקוד: <span id="score-val">0</span></div>
         <div class="stat-box">
-          INTEGRITY
+          מצב מבנה
           <div id="health-bar-container"><div id="health-fill"></div></div>
         </div>
       </div>
@@ -188,26 +192,25 @@
 
     <div id="damage-flash"></div>
 
-    <!-- Start Screen -->
+    <!-- מסך פתיחה -->
     <div id="start-screen" class="screen">
-      <h1>Protect the Tower</h1>
-      <p>1. Point your camera at the poster.<br>2. When the building is recognized, enemies will appear.<br>3. Keep enemies in your crosshair and TAP ANYWHERE to fire!</p>
-      <button id="start-btn">START CAMERA</button>
+      <h1>הגן על המגדל</h1>
+      <p>1. כוון את המצלמה אל הפוסטר.<br>2. כשהמבנה יזוהה, יופיעו חלליות אויב.<br>3. מקם את החלליות בתוך הכוונת ולחץ על המסך כדי לירות!</p>
+      <button id="start-btn">הפעל מצלמה</button>
     </div>
 
-    <!-- Game Over Screen -->
+    <!-- מסך סיום משחק -->
     <div id="game-over-screen" class="screen hidden">
-      <h1 style="color: red;">CRITICAL FAILURE</h1>
-      <p>The building has been destroyed.</p>
-      <h2>FINAL SCORE: <span id="final-score-val">0</span></h2>
-      <button id="restart-btn" style="margin-top: 20px;">RETRY</button>
+      <h1 style="color: red;">כישלון קריטי</h1>
+      <p>המבנה נהרס כליל.</p>
+      <h2>ניקוד סופי: <span id="final-score-val">0</span></h2>
+      <button id="restart-btn" style="margin-top: 20px;">נסה שוב</button>
     </div>
 
 
     <!-- 
-      A-Frame Scene with MindAR 
-      Note: target.mind is the compiled version of your reference image.
-      You MUST compile for_game_2.jpg into targets.mind for this to work.
+      סצנת A-Frame עם MindAR 
+      קובץ ה-targets.mind חייב להיות באותה תיקייה בשרת.
     -->
     <a-scene 
       mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiError: no;" 
@@ -217,30 +220,31 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <!-- Simple models using basic geometries -->
+        <!-- מודלים של הלייזרים -->
         <a-mixin id="laser-beam" geometry="primitive: cylinder; radius: 0.02; height: 1" material="color: #0ff; emissive: #0ff; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
         <a-mixin id="enemy-laser" geometry="primitive: cylinder; radius: 0.03; height: 0.5" material="color: #f00; emissive: #f00; emissiveIntensity: 2" rotation="90 0 0"></a-mixin>
         
-        <!-- Add your uploaded spaceship image here. Change spaceship.png to match your exact file name -->
+        <!-- תמונת החללית מ-GitHub (חובה לוודא שהשם מדויק) -->
         <img id="spaceship-img" src="spaceship.png" crossorigin="anonymous">
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- The Target Entity. Everything inside here is anchored to the recognized image -->
+      <!-- תאורה בסיסית כדי שהחלליות לא יהיו חשוכות -->
+      <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
+      <a-light type="directional" position="0 5 5" intensity="0.5"></a-light>
+
+      <!-- מוקד המעקב - הכל כאן מעוגן לפוסטר -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         
-        <!-- We use the target anchor as the center of our world (the building) -->
-        <!-- We will dynamically add enemies here via Javascript -->
-        
-        <!-- Invisible hit box representing the building -->
+        <!-- קובייה נסתרת המייצגת את מרכז המבנה (המטרה של האויבים) -->
         <a-box id="building-hitbox" position="0 0 0" width="1" height="2" depth="1" visible="false"></a-box>
 
       </a-entity>
     </a-scene>
 
     <script>
-      // --- Game State ---
+      // --- משתני משחק ---
       let isPlaying = false;
       let score = 0;
       let health = 100;
@@ -254,10 +258,9 @@
       let enemySpawnTimer = 0;
       let enemySpawnInterval = 2500;
 
-      // --- DOM Elements ---
+      // --- אלמנטים מה-DOM ---
       const sceneEl = document.querySelector('a-scene');
       const targetAnchor = document.querySelector('#target-anchor');
-      const buildingHitbox = document.querySelector('#building-hitbox');
       
       const uiContainer = document.getElementById('ui-container');
       const startScreen = document.getElementById('start-screen');
@@ -267,27 +270,27 @@
       const damageFlash = document.getElementById('damage-flash');
       const finalScoreVal = document.getElementById('final-score-val');
 
-      // --- MindAR Event Listeners ---
+      // --- מאזינים לאירועי MindAR ---
       sceneEl.addEventListener("arReady", (event) => {
-        console.log("MindAR is ready");
+        console.log("MindAR מוכן");
       });
 
       targetAnchor.addEventListener("targetFound", event => {
-        console.log("Target found!");
+        console.log("מטרה זוהתה!");
         targetFound = true;
         if(isPlaying) uiContainer.classList.remove('hidden');
       });
 
       targetAnchor.addEventListener("targetLost", event => {
-        console.log("Target lost!");
+        console.log("המטרה אבדה!");
         targetFound = false;
-        uiContainer.classList.add('hidden'); // Hide UI if looking away
+        uiContainer.classList.add('hidden'); // הסתרת ממשק אם מסתכלים הצידה
       });
 
-      // --- UI Flow ---
+      // --- זרימת המסכים ---
       document.getElementById('start-btn').addEventListener('click', () => {
         startScreen.classList.add('hidden');
-        sceneEl.systems["mindar-image-system"].start(); // Start camera
+        sceneEl.systems["mindar-image-system"].start(); // הפעלת מצלמה
         startGame();
       });
 
@@ -302,7 +305,7 @@
         enemySpawnInterval = 2500;
         updateUI();
         
-        // Cleanup existing entities
+        // ניקוי אלמנטים קיימים
         enemies.forEach(e => e.el.parentNode.removeChild(e.el));
         playerLasers.forEach(l => l.el.parentNode.removeChild(l.el));
         enemyLasers.forEach(l => l.el.parentNode.removeChild(l.el));
@@ -343,8 +346,7 @@
         if(health <= 0) endGame();
       }
 
-      // --- Interaction (Shooting) ---
-      // We listen on the window. Tapping anywhere fires from camera to center of screen
+      // --- אינטראקציה (ירייה) ---
       window.addEventListener('touchstart', (e) => {
         if(!isPlaying || !targetFound || e.target.tagName === 'BUTTON') return;
         e.preventDefault();
@@ -357,31 +359,12 @@
       });
 
       function firePlayerLaser() {
-        // A-Frame works by manipulating DOM elements that represent 3D objects
         const laserEl = document.createElement('a-entity');
         laserEl.setAttribute('mixin', 'laser-beam');
         
-        // To make the laser shoot from the PHONE towards the center of the screen
-        // we actually need to attach it to the camera temporarily, get its world position/rotation,
-        // then attach it to the scene so it flies independently.
+        // יצירת הלייזר מעט מתחת למצלמה
+        laserEl.setAttribute('position', '0 -0.2 -0.5'); 
         
-        const cameraEl = document.querySelector('a-camera');
-        const camWorldPos = new THREE.Vector3();
-        cameraEl.object3D.getWorldPosition(camWorldPos);
-        
-        const camWorldDir = new THREE.Vector3(0,0,-1);
-        camWorldDir.applyQuaternion(cameraEl.object3D.quaternion);
-        
-        // But since our whole game world is anchored to targetAnchor, 
-        // we need local coordinates relative to the target anchor.
-        // This is complex in A-Frame AR, so we'll simplify: 
-        // We know the camera is always at (0,0,0) in world space (MindAR moves the target, not camera).
-        
-        // Actually, MindAR moves the target anchor, keeping camera at 0,0,0.
-        // Let's add the laser to the scene (not the anchor) so it shoots straight from camera
-        laserEl.setAttribute('position', '0 -0.2 -0.5'); // Start slightly below camera
-        
-        // Aiming: it goes straight down the -Z axis of the camera
         sceneEl.appendChild(laserEl);
         
         playerLasers.push({
@@ -389,30 +372,26 @@
             pos: new THREE.Vector3(0, -0.2, -0.5),
             dir: new THREE.Vector3(0, 0, -1),
             speed: 15,
-            life: 2.0 // seconds
+            life: 2.0 // שניות
         });
       }
 
-      // --- Spawning Enemies ---
+      // --- יצירת אויבים ---
       function spawnEnemy() {
-        if(!targetFound) return; // Only spawn if tracking
+        if(!targetFound) return; 
 
-        // Use a-image for a 2D sprite instead of a 3D model
         const enemyEl = document.createElement('a-image');
         enemyEl.setAttribute('src', '#spaceship-img');
-        enemyEl.setAttribute('width', '1.2'); // Size of the ship
-        enemyEl.setAttribute('height', '1.2');
-        enemyEl.setAttribute('look-at', '[camera]'); // Makes the 2D image always face your phone
+        
+        // תיקון קריטי: הקטנת החלליות לגודל הגיוני ביחס לפוסטר (0.25 אומר רבע מרוחב הפוסטר)
+        enemyEl.setAttribute('width', '0.25'); 
+        enemyEl.setAttribute('height', '0.25');
+        enemyEl.setAttribute('look-at', '[camera]'); // פונה תמיד למשתמש
 
-        // Spawn relative to the target anchor (the building)
-        // Spawn them in a hemisphere above the building, CLOSER so they are visible
-        const radius = 3.5 + Math.random() * 1.5;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * (Math.PI / 2.5); // Elevation
-
-        const x = radius * Math.sin(phi) * Math.cos(theta);
-        const y = Math.abs(radius * Math.cos(phi)); // Ensure they are above (y > 0)
-        const z = radius * Math.sin(phi) * Math.sin(theta);
+        // תיקון קריטי: מיקום - קרוב יותר ומוודא שזה נוצר מלפני הפוסטר (ציר Z חיובי)
+        const x = (Math.random() - 0.5) * 1.5; // מיקום אקראי שמאלה-ימינה
+        const y = (Math.random() - 0.5) * 1.5; // מיקום אקראי למעלה-למטה
+        const z = 0.2 + (Math.random() * 0.8); // מיקום בולט החוצה מהפוסטר אליך!
 
         enemyEl.setAttribute('position', `${x} ${y} ${z}`);
 
@@ -421,7 +400,7 @@
         enemies.push({
             el: enemyEl,
             health: 2,
-            speed: 0.3 + Math.random() * 0.3,
+            speed: 0.15 + Math.random() * 0.2,
             lastFire: performance.now() + Math.random() * 2000,
             fireRate: 2000 + Math.random() * 2000
         });
@@ -431,29 +410,25 @@
         const laserEl = document.createElement('a-entity');
         laserEl.setAttribute('mixin', 'enemy-laser');
         
-        // Get enemy local position
         const pos = enemyObj.el.getAttribute('position');
         laserEl.setAttribute('position', pos);
         
         targetAnchor.appendChild(laserEl);
         
-        // Direction is from enemy to center (0,0,0)
+        // כיוון למרכז הפוסטר
         const dir = new THREE.Vector3(-pos.x, -pos.y, -pos.z).normalize();
-        
-        // Orient laser
         laserEl.object3D.lookAt(0,0,0);
 
         enemyLasers.push({
             el: laserEl,
             pos: new THREE.Vector3(pos.x, pos.y, pos.z),
             dir: dir,
-            speed: 3,
+            speed: 2,
             life: 3.0
         });
       }
 
-
-      // --- Main Game Loop ---
+      // --- לולאת המשחק הראשית ---
       function gameLoop(time) {
         if(!isPlaying) return;
         requestAnimationFrame(gameLoop);
@@ -462,44 +437,39 @@
         if(dt > 0.1) dt = 0.1;
         lastTime = time;
 
-        if(!targetFound) return; // Pause logic if not tracking
+        if(!targetFound) return; 
 
-        // 1. Spawning
+        // 1. יצירת אויבים
         enemySpawnTimer += dt * 1000;
         if(enemySpawnTimer > enemySpawnInterval) {
             spawnEnemy();
             enemySpawnTimer = 0;
-            if(enemySpawnInterval > 800) enemySpawnInterval -= 50; // Get harder
+            if(enemySpawnInterval > 800) enemySpawnInterval -= 50; // המשחק נהיה קשה יותר
         }
 
-        // 2. Update Enemies
+        // 2. עדכון מיקום אויבים
         for(let i = enemies.length - 1; i >= 0; i--) {
             let e = enemies[i];
             let pos = e.el.object3D.position;
             
-            // Move to center
+            // תנועה למרכז המבנה (0,0,0)
             let dir = new THREE.Vector3(-pos.x, -pos.y, -pos.z).normalize();
             pos.add(dir.multiplyScalar(e.speed * dt));
             
-            // We removed the lookAt(0,0,0) line here because the 'look-at' component 
-            // is now handling rotation to keep the sprite facing the camera.
-
-            // Check if reached building
-            if(pos.length() < 0.5) { // Hit radius of building
+            if(pos.length() < 0.2) { // פגיעה במבנה
                 takeDamage(10);
                 e.el.parentNode.removeChild(e.el);
                 enemies.splice(i, 1);
                 continue;
             }
 
-            // Fire laser
             if(time > e.lastFire + e.fireRate) {
                 fireEnemyLaser(e);
                 e.lastFire = time;
             }
         }
 
-        // 3. Update Player Lasers (World Space)
+        // 3. עדכון לייזרים של השחקן
         for(let i = playerLasers.length - 1; i >= 0; i--) {
             let l = playerLasers[i];
             l.pos.add(l.dir.clone().multiplyScalar(l.speed * dt));
@@ -507,9 +477,6 @@
             l.life -= dt;
 
             let hit = false;
-            
-            // Collision check: Player laser (world space) vs Enemies (local space)
-            // We need to convert enemy local pos to world pos to check distance
             let laserWorldPos = l.pos;
 
             for(let j = enemies.length - 1; j >= 0; j--) {
@@ -517,7 +484,7 @@
                 let enemyWorldPos = new THREE.Vector3();
                 e.el.object3D.getWorldPosition(enemyWorldPos);
 
-                if(laserWorldPos.distanceTo(enemyWorldPos) < 0.8) { // Hit radius
+                if(laserWorldPos.distanceTo(enemyWorldPos) < 0.4) { // טווח פגיעה באויב
                     hit = true;
                     e.health--;
                     
@@ -537,15 +504,14 @@
             }
         }
 
-        // 4. Update Enemy Lasers (Local Space)
+        // 4. עדכון לייזרים של האויב
         for(let i = enemyLasers.length - 1; i >= 0; i--) {
             let l = enemyLasers[i];
             l.pos.add(l.dir.clone().multiplyScalar(l.speed * dt));
             l.el.object3D.position.copy(l.pos);
             l.life -= dt;
 
-            // Check hit building (origin)
-            if(l.pos.length() < 0.5) {
+            if(l.pos.length() < 0.2) {
                 takeDamage(5);
                 l.el.parentNode.removeChild(l.el);
                 enemyLasers.splice(i, 1);
