@@ -30,7 +30,7 @@
 
     <div id="start-screen" class="screen">
       <h1>הגן על המגדל</h1>
-      <p>כוון אל התמונה המזוהה</p>
+      <p>כוון אל המבנה בתמונה</p>
       <button id="start-btn">הפעל מצלמה</button>
     </div>
 
@@ -44,13 +44,12 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        <!-- מסגרת מוקטנת משמעותית כדי להתאים לגודל הנכון -->
+        <!-- מסגרת דקה ומדויקת יותר הצמודה לפני השטח -->
         <a-entity 
-          geometry="primitive: plane; width: 0.25; height: 0.25" 
-          material="color: red; wireframe: true; wireframeLinewidth: 5; shader: flat" 
-          position="0 0 0.01">
+          geometry="primitive: plane; width: 0.15; height: 0.25" 
+          material="color: #ff0000; wireframe: true; wireframeLinewidth: 3; shader: flat" 
+          position="0 0 0.001">
         </a-entity>
-        <a-text value="זיהוי פעיל" position="0 0.2 0.01" align="center" color="#0ff" scale="0.2 0.2 0.2"></a-text>
       </a-entity>
     </a-scene>
 
