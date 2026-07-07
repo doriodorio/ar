@@ -91,7 +91,7 @@
           width="1.25" 
           height="1.25" 
           depth="1" 
-          position="0.75 0 0.75" 
+          position="-0.75 0 0.75" 
           material="wireframe: true; wireframeLinewidth: 5; shader: flat">
         </a-box>
         
@@ -255,8 +255,8 @@
         enemyEl.setAttribute('color', '#ffaa00'); // צבע כתום
         enemyEl.setAttribute('material', 'shader: flat'); // ייראה טוב בלי תאורה
 
-        // חישוב מיקום אקראי בתוך התיבה:
-        const x = 0.75 + (Math.random() - 0.5) * 1.25; 
+        // חישוב מיקום אקראי בתוך התיבה (עודכן לצד שמאל):
+        const x = -0.75 + (Math.random() - 0.5) * 1.25; 
         const y = 0 + (Math.random() - 0.5) * 1.25; 
         const z = 0.75 + (Math.random() - 0.5) * 1.0; 
 
