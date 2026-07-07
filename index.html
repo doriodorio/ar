@@ -81,8 +81,9 @@
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
-      <a-assets>
-        <!-- כאן אנחנו טוענים את המודל התלת-ממדי (חובה קובץ glb) -->
+      <!-- הגדרנו טיימאאוט למקרה שהמודל חסר, כך שהמשחק לא ייתקע -->
+      <a-assets timeout="3000">
+        <!-- כאן אנחנו טוענים את המודל התלת-ממדי -->
         <a-asset-item id="spaceship-model" src="3dassets/spaceship.glb"></a-asset-item>
       </a-assets>
 
@@ -93,7 +94,7 @@
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         
-        <!-- החזרנו את הקופסה האדומה כדי לראות את אזור ההיווצרות -->
+        <!-- החזרנו את הקופסה האדומה וסידרנו את הגדרות הצבע שלה כדי שתבלוט תמיד -->
         <a-box 
           id="spawn-zone"
           visible="true"
@@ -101,12 +102,11 @@
           height="1.25" 
           depth="1" 
           position="0.15 0 0.75"
-          material="wireframe: true; wireframeLinewidth: 5; shader: flat"
-          color="red">
+          material="color: red; wireframe: true; wireframeLinewidth: 5; shader: flat">
         </a-box>
         
-        <!-- החזרנו גם את נקודת היעד -->
-        <a-sphere position="0.25 0 0" radius="0.05" color="blue" visible="true"></a-sphere>
+        <!-- נקודת היעד -->
+        <a-sphere position="0.25 0 0" radius="0.05" material="color: blue; shader: flat" visible="true"></a-sphere>
 
       </a-entity>
     </a-scene>
@@ -198,7 +198,7 @@
         if(health <= 0) endGame();
       }
 
-      // --- מערכת ירי באמצעות המרת מיקום המסך (Screen-space targeting) ---
+      // --- מערכת ירי באמצעות המרת מיקום המסך ---
       window.addEventListener('touchstart', (e) => {
         if(!isPlaying || !targetFound || e.target.tagName === 'BUTTON') return;
         e.preventDefault();
@@ -246,7 +246,7 @@
         }
       }
 
-      // --- היווצרות אויבים בתוך התיבה ---
+      // --- היווצרות אויבים ---
       function spawnEnemy() {
         if(!targetFound) return; 
 
@@ -263,7 +263,7 @@
         // כיוון האויב להסתכל על נקודת היעד
         enemyEl.object3D.lookAt(TARGET_POINT);
 
-        // 1. נטען את מודל החללית התלת-ממדי (נקווה שיעבוד)
+        // 1. נטען את מודל החללית התלת-ממדי 
         const modelEl = document.createElement('a-entity');
         modelEl.setAttribute('gltf-model', '#spaceship-model');
         modelEl.setAttribute('scale', '0.05 0.05 0.05');
@@ -274,8 +274,7 @@
         boxEl.setAttribute('width', '0.15');
         boxEl.setAttribute('height', '0.15');
         boxEl.setAttribute('depth', '0.15');
-        boxEl.setAttribute('color', '#ffaa00');
-        boxEl.setAttribute('material', 'wireframe: true; wireframeLinewidth: 3');
+        boxEl.setAttribute('material', 'color: #ffaa00; wireframe: true; wireframeLinewidth: 3; shader: flat');
         enemyEl.appendChild(boxEl);
 
         targetAnchor.appendChild(enemyEl);
