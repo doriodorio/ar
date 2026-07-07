@@ -81,9 +81,7 @@
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
-      <!-- הגדרנו טיימאאוט למקרה שהמודל חסר, כך שהמשחק לא ייתקע -->
       <a-assets timeout="10000">
-        <!-- שימוש בכתובת הישירה (Raw) כדי למנוע בעיות נתיבים -->
         <a-asset-item id="spaceship-model" src="https://raw.githubusercontent.com/doriodorio/ar/main/3dassets/ship15cm.glb"></a-asset-item>
       </a-assets>
 
@@ -94,10 +92,10 @@
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         
-        <!-- החזרנו את הקופסה האדומה וסידרנו את הגדרות הצבע שלה כדי שתבלוט תמיד -->
+        <!-- הקובייה הוסתרה ע"י שינוי visible ל-false -->
         <a-box 
           id="spawn-zone"
-          visible="true"
+          visible="false"
           width="1.25" 
           height="1.25" 
           depth="1" 
@@ -105,7 +103,6 @@
           material="color: red; wireframe: true; wireframeLinewidth: 5; shader: flat">
         </a-box>
         
-        <!-- נקודת היעד -->
         <a-sphere position="0.25 0 0" radius="0.05" material="color: blue; shader: flat" visible="true"></a-sphere>
 
       </a-entity>
@@ -123,7 +120,6 @@
       let enemySpawnTimer = 0;
       let enemySpawnInterval = 2000;
 
-      // יעד התנועה של האויבים
       const TARGET_POINT = new THREE.Vector3(0.25, 0, 0);
 
       const sceneEl = document.querySelector('a-scene');
@@ -198,7 +194,6 @@
         if(health <= 0) endGame();
       }
 
-      // --- מערכת ירי באמצעות המרת מיקום המסך ---
       window.addEventListener('touchstart', (e) => {
         if(!isPlaying || !targetFound || e.target.tagName === 'BUTTON') return;
         e.preventDefault();
@@ -229,7 +224,6 @@
           if (worldPos.z < 1) {
             let distToCenter = Math.sqrt(worldPos.x * worldPos.x + worldPos.y * worldPos.y);
 
-            // אם האויב בתוך רדיוס הכוונת
             if (distToCenter < 0.25 && distToCenter < closestDist) {
               closestDist = distToCenter;
               hitIndex = i;
@@ -246,47 +240,37 @@
         }
       }
 
-      // --- היווצרות אויבים ---
       function spawnEnemy() {
         if(!targetFound) return; 
 
-        // יוצרים קונטיינר ריק שיכיל גם את הקובייה וגם את המודל
         const enemyEl = document.createElement('a-entity');
         
-        // חישוב מיקום אקראי בתוך התיבה המקורית:
         const x = 0.15 + (Math.random() - 0.5) * 1.25; 
         const y = 0 + (Math.random() - 0.5) * 1.25; 
         const z = 0.75 + (Math.random() - 0.5) * 1.0; 
 
-        // הגדרה ישירה של המיקום בתלת-ממד כדי שהסיבוב יתחשב בו מיד!
         enemyEl.object3D.position.set(x, y, z);
-        
-        // כיוון האויב להסתכל על נקודת היעד (מחושב במדויק בזכות המיקום למעלה)
         enemyEl.object3D.lookAt(TARGET_POINT);
 
-        // 1. הוספת קוביית Wireframe כתומה
         const boxEl = document.createElement('a-entity');
         boxEl.setAttribute('geometry', 'primitive: box; width: 0.15; height: 0.15; depth: 0.15');
         boxEl.setAttribute('material', 'color: #ffaa00; wireframe: true; wireframeLinewidth: 2; shader: flat');
         enemyEl.appendChild(boxEl);
 
-        // 2. הוספת מודל החללית לתוך אותו קונטיינר
         const modelEl = document.createElement('a-entity');
         modelEl.setAttribute('gltf-model', '#spaceship-model');
-        modelEl.setAttribute('scale', '1 1 1'); // ביטול ההקטנה - חזר לגודל 1
-        modelEl.setAttribute('rotation', '0 90 90'); // סיבוב ב-90 מעלות בציר ה-Y ובציר ה-Z
+        modelEl.setAttribute('scale', '1 1 1'); 
+        modelEl.setAttribute('rotation', '0 90 90'); 
         
-        // הוספת אירוע טעינה שמשנה את כל החומרים של המודל לזהב
         modelEl.addEventListener('model-loaded', () => {
           const obj = modelEl.getObject3D('mesh');
           if (obj) {
             obj.traverse((node) => {
               if (node.isMesh) {
-                // יצירת חומר זהב מתכתי
                 node.material = new THREE.MeshStandardMaterial({
-                  color: 0xffd700, // צבע זהב (Hex)
-                  metalness: 1.0,  // מתכתי מאוד
-                  roughness: 0.3   // מבריק (חספוס נמוך)
+                  color: 0xffd700, 
+                  metalness: 1.0,  
+                  roughness: 0.3   
                 });
               }
             });
@@ -304,7 +288,6 @@
         });
       }
 
-      // --- לולאת המשחק ---
       function gameLoop(time) {
         if(!isPlaying) return;
         requestAnimationFrame(gameLoop);
@@ -328,7 +311,6 @@
             
             let dir = new THREE.Vector3().subVectors(TARGET_POINT, pos).normalize();
             
-            // מוודאים שהאויב תמיד מסתכל לכיוון ההתקדמות שלו גם בזמן טיסה
             e.el.object3D.lookAt(TARGET_POINT);
 
             pos.add(dir.multiplyScalar(e.speed * dt));
