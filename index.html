@@ -83,8 +83,8 @@
       
       <!-- הגדרנו טיימאאוט למקרה שהמודל חסר, כך שהמשחק לא ייתקע -->
       <a-assets timeout="3000">
-        <!-- כאן אנחנו טוענים את המודל התלת-ממדי -->
-        <a-asset-item id="spaceship-model" src="3dassets/spaceship.glb"></a-asset-item>
+        <!-- עדכון שם הקובץ כך שיכלול את הרווח (%20) בדיוק כמו ב-GitHub -->
+        <a-asset-item id="spaceship-model" src="3dassets/space%20ship.glb"></a-asset-item>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -263,7 +263,7 @@
         // כיוון האויב להסתכל על נקודת היעד
         enemyEl.object3D.lookAt(TARGET_POINT);
 
-        // 1. נטען את מודל החללית התלת-ממדי 
+        // 1. נטען את מודל החללית התלת-ממדי (עם השם המעודכן)
         const modelEl = document.createElement('a-entity');
         modelEl.setAttribute('gltf-model', '#spaceship-model');
         modelEl.setAttribute('scale', '0.05 0.05 0.05');
