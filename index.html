@@ -263,11 +263,9 @@
         // כיוון האויב להסתכל על נקודת היעד
         enemyEl.object3D.lookAt(TARGET_POINT);
 
-        // 1. הוספת קוביית Wireframe כתומה (כדי שתמיד נראה משהו)
-        const boxEl = document.createElement('a-box');
-        boxEl.setAttribute('width', '0.15');
-        boxEl.setAttribute('height', '0.15');
-        boxEl.setAttribute('depth', '0.15');
+        // 1. הוספת קוביית Wireframe כתומה (בגישה מפורשת כדי להבטיח שקיפות)
+        const boxEl = document.createElement('a-entity');
+        boxEl.setAttribute('geometry', 'primitive: box; width: 0.15; height: 0.15; depth: 0.15');
         boxEl.setAttribute('material', 'color: #ffaa00; wireframe: true; wireframeLinewidth: 2; shader: flat');
         enemyEl.appendChild(boxEl);
 
