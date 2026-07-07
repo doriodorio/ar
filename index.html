@@ -263,19 +263,12 @@
         // כיוון האויב להסתכל על נקודת היעד
         enemyEl.object3D.lookAt(TARGET_POINT);
 
-        // 1. נטען את מודל החללית התלת-ממדי (עם השם המעודכן)
+        // 1. נטען את מודל החללית התלת-ממדי
         const modelEl = document.createElement('a-entity');
         modelEl.setAttribute('gltf-model', '#spaceship-model');
-        modelEl.setAttribute('scale', '0.05 0.05 0.05');
+        // הקטנו את הספינה ל-20% ממה שהייתה קודם (מ-0.05 ל-0.01)
+        modelEl.setAttribute('scale', '0.01 0.01 0.01');
         enemyEl.appendChild(modelEl);
-
-        // 2. קוביית גיבוי כתומה שקופה - כדי שתמיד נראה אותם, גם אם החללית לא נטענת!
-        const boxEl = document.createElement('a-box');
-        boxEl.setAttribute('width', '0.15');
-        boxEl.setAttribute('height', '0.15');
-        boxEl.setAttribute('depth', '0.15');
-        boxEl.setAttribute('material', 'color: #ffaa00; wireframe: true; wireframeLinewidth: 3; shader: flat');
-        enemyEl.appendChild(boxEl);
 
         targetAnchor.appendChild(enemyEl);
 
