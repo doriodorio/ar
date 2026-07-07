@@ -75,6 +75,7 @@
       
       <a-assets timeout="10000">
         <a-asset-item id="asteroid-model" src="https://raw.githubusercontent.com/doriodorio/ar/8136d6a51917f3c295d3e1c92aed8e6799df2ee0/3dassets/asteriod.glb"></a-asset-item>
+        <img id="rock-texture" src="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=512">
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -157,6 +158,8 @@
         
         const modelEl = document.createElement('a-entity');
         modelEl.setAttribute('gltf-model', '#asteroid-model');
+        // החלת הטקסטורה על המודל
+        modelEl.setAttribute('material', 'src: #rock-texture');
         modelEl.setAttribute('scale', '0.5 0.5 0.5'); 
         enemyEl.appendChild(modelEl);
         targetAnchor.appendChild(enemyEl);
