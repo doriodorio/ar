@@ -187,7 +187,7 @@
         if(health <= 0) endGame();
       }
 
-      // --- מערכת ירי באמצעות Raycaster (ירי מדויק ממרכז המסך) ---
+      // --- מערכת ירי באמצעות המרת מיקום המסך (Screen-space targeting) ---
       window.addEventListener('touchstart', (e) => {
         if(!isPlaying || !targetFound || e.target.tagName === 'BUTTON') return;
         e.preventDefault();
@@ -206,43 +206,41 @@
         scopeDot.classList.add('firing');
         setTimeout(() => scopeDot.classList.remove('firing'), 100);
 
-        // יצירת קרן לבדיקת פגיעות (Raycaster)
-        const raycaster = new THREE.Raycaster();
-        // הגדרת הקרן לצאת ממרכז המצלמה (0,0 במסך) אל תוך העולם
-        raycaster.setFromCamera(new THREE.Vector2(0, 0), sceneEl.camera);
+        let hitIndex = -1;
+        let closestDist = Infinity;
 
-        // איסוף כל המודלים התלת-ממדיים של האויבים
-        const enemyObjects = enemies.map(e => e.el.object3D);
-        
-        // בדיקת חיתוך בין הקרן לאויבים (כולל צאצאים)
-        const intersects = raycaster.intersectObjects(enemyObjects, true);
+        // מעבר על כל האויבים כדי לבדוק מי קרוב למרכז המסך
+        for (let i = 0; i < enemies.length; i++) {
+          let enemy3D = enemies[i].el.object3D;
+          
+          // מציאת המיקום בעולם האמיתי (World Position) של האויב
+          let worldPos = new THREE.Vector3();
+          enemy3D.getWorldPosition(worldPos);
 
-        if (intersects.length > 0) {
-          // מצאנו פגיעה! נבדוק איזה אויב זה היה
-          let hitObject = intersects[0].object;
-          let hitIndex = -1;
+          // המרת המיקום בעולם אל מיקום במסך של המצלמה 
+          // הופך לקואורדינטות של -1 עד 1 (0,0 זה בדיוק מרכז המסך איפה שהכוונת!)
+          worldPos.project(sceneEl.camera);
 
-          for (let i = 0; i < enemies.length; i++) {
-            let curr = hitObject;
-            // מטפסים בעץ האובייקטים למקרה שהפגיעה הייתה במעטפת הפנימית של הקובייה
-            while (curr) {
-              if (curr === enemies[i].el.object3D) {
-                hitIndex = i;
-                break;
-              }
-              curr = curr.parent;
+          // בודק שהאויב נמצא לפני המצלמה ולא מאחוריה
+          if (worldPos.z < 1) {
+            // חישוב המרחק של האויב ממרכז המסך (הכוונת)
+            let distToCenter = Math.sqrt(worldPos.x * worldPos.x + worldPos.y * worldPos.y);
+
+            // אם האויב נמצא ברדיוס של 0.2 ממרכז המסך (בערך גודל הכוונת)
+            if (distToCenter < 0.2 && distToCenter < closestDist) {
+              closestDist = distToCenter;
+              hitIndex = i;
             }
-            if (hitIndex !== -1) break;
           }
+        }
 
-          // אם זיהינו את האויב שנפגע, משמידים אותו
-          if (hitIndex !== -1) {
-            let hitEnemy = enemies[hitIndex];
-            hitEnemy.el.parentNode.removeChild(hitEnemy.el);
-            enemies.splice(hitIndex, 1);
-            score += 100;
-            updateUI();
-          }
+        // אם זוהתה פגיעה באויב שהיה בכוונת
+        if (hitIndex !== -1) {
+          let hitEnemy = enemies[hitIndex];
+          hitEnemy.el.parentNode.removeChild(hitEnemy.el);
+          enemies.splice(hitIndex, 1);
+          score += 100;
+          updateUI();
         }
       }
 
@@ -251,4 +249,68 @@
         if(!targetFound) return; 
 
         const enemyEl = document.createElement('a-box');
-        enemyEl.setAttribute('width', '0
+        enemyEl.setAttribute('width', '0.15');
+        enemyEl.setAttribute('height', '0.15');
+        enemyEl.setAttribute('depth', '0.15');
+        enemyEl.setAttribute('color', '#ffaa00'); // צבע כתום
+        enemyEl.setAttribute('material', 'shader: flat'); // ייראה טוב בלי תאורה
+
+        // חישוב מיקום אקראי בתוך התיבה:
+        const x = 0.75 + (Math.random() - 0.5) * 1.25; 
+        const y = 0 + (Math.random() - 0.5) * 1.25; 
+        const z = 0.75 + (Math.random() - 0.5) * 1.0; 
+
+        enemyEl.setAttribute('position', `${x} ${y} ${z}`);
+        
+        // כיוון האויב להסתכל על נקודת היעד
+        enemyEl.object3D.lookAt(TARGET_POINT);
+
+        targetAnchor.appendChild(enemyEl);
+
+        enemies.push({
+            el: enemyEl,
+            health: 1,
+            speed: 0.1 + Math.random() * 0.15
+        });
+      }
+
+      // --- לולאת המשחק ---
+      function gameLoop(time) {
+        if(!isPlaying) return;
+        requestAnimationFrame(gameLoop);
+
+        let dt = (time - lastTime) / 1000;
+        if(dt > 0.1) dt = 0.1;
+        lastTime = time;
+
+        if(!targetFound) return; 
+
+        // 1. יצירת אויבים חדשים
+        enemySpawnTimer += dt * 1000;
+        if(enemySpawnTimer > enemySpawnInterval) {
+            spawnEnemy();
+            enemySpawnTimer = 0;
+            if(enemySpawnInterval > 800) enemySpawnInterval -= 50; 
+        }
+
+        // 2. תנועת אויבים ובדיקת פגיעה במבנה
+        for(let i = enemies.length - 1; i >= 0; i--) {
+            let e = enemies[i];
+            let pos = e.el.object3D.position;
+            
+            // חישוב וקטור תנועה לעבר היעד (0.25, 0, 0)
+            let dir = new THREE.Vector3().subVectors(TARGET_POINT, pos).normalize();
+            pos.add(dir.multiplyScalar(e.speed * dt));
+            
+            // האויב פגע ביעד!
+            if(pos.distanceTo(TARGET_POINT) < 0.1) {
+                takeDamage(10);
+                e.el.parentNode.removeChild(e.el);
+                enemies.splice(i, 1);
+                continue;
+            }
+        }
+      }
+    </script>
+  </body>
+</html>
