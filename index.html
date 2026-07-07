@@ -258,12 +258,13 @@
         const y = 0 + (Math.random() - 0.5) * 1.25; 
         const z = 0.75 + (Math.random() - 0.5) * 1.0; 
 
-        enemyEl.setAttribute('position', `${x} ${y} ${z}`);
+        // הגדרה ישירה של המיקום בתלת-ממד כדי שהסיבוב יתחשב בו מיד!
+        enemyEl.object3D.position.set(x, y, z);
         
-        // כיוון האויב להסתכל על נקודת היעד
+        // כיוון האויב להסתכל על נקודת היעד (מחושב במדויק בזכות המיקום למעלה)
         enemyEl.object3D.lookAt(TARGET_POINT);
 
-        // 1. הוספת קוביית Wireframe כתומה (בגישה מפורשת כדי להבטיח שקיפות)
+        // 1. הוספת קוביית Wireframe כתומה
         const boxEl = document.createElement('a-entity');
         boxEl.setAttribute('geometry', 'primitive: box; width: 0.15; height: 0.15; depth: 0.15');
         boxEl.setAttribute('material', 'color: #ffaa00; wireframe: true; wireframeLinewidth: 2; shader: flat');
@@ -326,6 +327,10 @@
             let pos = e.el.object3D.position;
             
             let dir = new THREE.Vector3().subVectors(TARGET_POINT, pos).normalize();
+            
+            // מוודאים שהאויב תמיד מסתכל לכיוון ההתקדמות שלו גם בזמן טיסה
+            e.el.object3D.lookAt(TARGET_POINT);
+
             pos.add(dir.multiplyScalar(e.speed * dt));
             
             if(pos.distanceTo(TARGET_POINT) < 0.1) {
