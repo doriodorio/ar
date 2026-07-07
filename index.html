@@ -81,21 +81,29 @@
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
+      <a-assets>
+        <!-- כאן אנחנו טוענים את המודל התלת-ממדי (חובה קובץ glb) -->
+        <a-asset-item id="spaceship-model" src="3dassets/spaceship.glb"></a-asset-item>
+      </a-assets>
+
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
+      <a-light type="directional" position="0 5 5" intensity="1.5"></a-light>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         
+        <!-- הסתרנו את הקופסה האדומה כדי שהמשחק ייראה נקי -->
         <a-box 
           id="spawn-zone"
-          color="red" 
+          visible="false"
           width="1.25" 
           height="1.25" 
           depth="1" 
-          position="0.15 0 0.75" 
-          material="wireframe: true; wireframeLinewidth: 5; shader: flat">
+          position="0.15 0 0.75">
         </a-box>
         
-        <a-sphere position="0.25 0 0" radius="0.05" color="blue" material="shader: flat"></a-sphere>
+        <a-sphere position="0.25 0 0" radius="0.05" color="blue" visible="false"></a-sphere>
 
       </a-entity>
     </a-scene>
@@ -112,7 +120,7 @@
       let enemySpawnTimer = 0;
       let enemySpawnInterval = 2000;
 
-      // יעד התנועה והירי של האויבים
+      // יעד התנועה של האויבים
       const TARGET_POINT = new THREE.Vector3(0.25, 0, 0);
 
       const sceneEl = document.querySelector('a-scene');
@@ -202,39 +210,30 @@
       function firePlayerLaser() {
         if (!sceneEl.camera) return;
 
-        // אפקט ויזואלי לנקודת הכוונת כדי לתת תחושת ירייה
         scopeDot.classList.add('firing');
         setTimeout(() => scopeDot.classList.remove('firing'), 100);
 
         let hitIndex = -1;
         let closestDist = Infinity;
 
-        // מעבר על כל האויבים כדי לבדוק מי קרוב למרכז המסך
         for (let i = 0; i < enemies.length; i++) {
           let enemy3D = enemies[i].el.object3D;
           
-          // מציאת המיקום בעולם האמיתי (World Position) של האויב
           let worldPos = new THREE.Vector3();
           enemy3D.getWorldPosition(worldPos);
-
-          // המרת המיקום בעולם אל מיקום במסך של המצלמה 
-          // הופך לקואורדינטות של -1 עד 1 (0,0 זה בדיוק מרכז המסך איפה שהכוונת!)
           worldPos.project(sceneEl.camera);
 
-          // בודק שהאויב נמצא לפני המצלמה ולא מאחוריה
           if (worldPos.z < 1) {
-            // חישוב המרחק של האויב ממרכז המסך (הכוונת)
             let distToCenter = Math.sqrt(worldPos.x * worldPos.x + worldPos.y * worldPos.y);
 
-            // אם האויב נמצא ברדיוס של 0.2 ממרכז המסך (בערך גודל הכוונת)
-            if (distToCenter < 0.2 && distToCenter < closestDist) {
+            // אם האויב בתוך רדיוס הכוונת
+            if (distToCenter < 0.25 && distToCenter < closestDist) {
               closestDist = distToCenter;
               hitIndex = i;
             }
           }
         }
 
-        // אם זוהתה פגיעה באויב שהיה בכוונת
         if (hitIndex !== -1) {
           let hitEnemy = enemies[hitIndex];
           hitEnemy.el.parentNode.removeChild(hitEnemy.el);
@@ -244,18 +243,18 @@
         }
       }
 
-      // --- היווצרות אויבים בתוך התיבה שהגדרת ---
+      // --- היווצרות אויבים בתוך התיבה ---
       function spawnEnemy() {
         if(!targetFound) return; 
 
-        const enemyEl = document.createElement('a-box');
-        enemyEl.setAttribute('width', '0.15');
-        enemyEl.setAttribute('height', '0.15');
-        enemyEl.setAttribute('depth', '0.15');
-        enemyEl.setAttribute('color', '#ffaa00'); // צבע כתום
-        enemyEl.setAttribute('material', 'shader: flat'); // ייראה טוב בלי תאורה
+        // יוצרים אובייקט תלת-ממדי ריק שאליו נטען את החללית
+        const enemyEl = document.createElement('a-entity');
+        enemyEl.setAttribute('gltf-model', '#spaceship-model');
+        
+        // **הגדרת גודל החללית** (אם היא ענקית או קטנה מדי, שנה את המספרים האלו!)
+        enemyEl.setAttribute('scale', '0.05 0.05 0.05');
 
-        // חישוב מיקום אקראי בתוך התיבה (עודכן למיקום החדש: 0.15):
+        // חישוב מיקום אקראי בתוך התיבה המקורית שהגדרנו:
         const x = 0.15 + (Math.random() - 0.5) * 1.25; 
         const y = 0 + (Math.random() - 0.5) * 1.25; 
         const z = 0.75 + (Math.random() - 0.5) * 1.0; 
@@ -285,7 +284,6 @@
 
         if(!targetFound) return; 
 
-        // 1. יצירת אויבים חדשים
         enemySpawnTimer += dt * 1000;
         if(enemySpawnTimer > enemySpawnInterval) {
             spawnEnemy();
@@ -293,16 +291,13 @@
             if(enemySpawnInterval > 800) enemySpawnInterval -= 50; 
         }
 
-        // 2. תנועת אויבים ובדיקת פגיעה במבנה
         for(let i = enemies.length - 1; i >= 0; i--) {
             let e = enemies[i];
             let pos = e.el.object3D.position;
             
-            // חישוב וקטור תנועה לעבר היעד (0.25, 0, 0)
             let dir = new THREE.Vector3().subVectors(TARGET_POINT, pos).normalize();
             pos.add(dir.multiplyScalar(e.speed * dt));
             
-            // האויב פגע ביעד!
             if(pos.distanceTo(TARGET_POINT) < 0.1) {
                 takeDamage(10);
                 e.el.parentNode.removeChild(e.el);
