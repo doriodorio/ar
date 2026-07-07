@@ -28,14 +28,15 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- מסגרת ריבועית מושלמת שתשב על התמונה -->
-        <a-plane 
+        <!-- תיבה במידות 1.5x1.5x1.5 שממוקמת בהתאם להנחיות -->
+        <a-box 
           color="red" 
-          width="1" 
-          height="1" 
-          position="0 0 0" 
-          material="wireframe: true; wireframeLinewidth: 10; shader: flat">
-        </a-plane>
+          width="1.5" 
+          height="1.5" 
+          depth="1.5" 
+          position="-0.25 0.25 0.75" 
+          material="wireframe: true; wireframeLinewidth: 5; shader: flat">
+        </a-box>
       </a-entity>
     </a-scene>
 
