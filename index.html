@@ -73,10 +73,18 @@
       
       document.getElementById('start-btn').addEventListener('click', async () => {
         try {
+          // Warm up the camera
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+          stream.getTracks().forEach(track => track.stop());
+
           await sceneEl.systems["mindar-image-system"].start();
           document.getElementById('start-screen').classList.add('hidden');
           startGame();
-        } catch(e) { location.reload(); }
+        } catch(e) { 
+          console.error("Camera error:", e);
+          const startScreen = document.getElementById('start-screen');
+          startScreen.innerHTML = "<h1>שגיאה במצלמה</h1><p>אנא וודא שהרשאת מצלמה מאושרת.</p><button onclick='location.reload()'>נסה שוב</button>";
+        }
       });
 
       function startGame() {
@@ -87,7 +95,6 @@
       function spawnEnemy() {
         if(!targetFound || !isPlaying) return;
         const enemyEl = document.createElement('a-entity');
-        // מתחילים רחוק מהמצלמה (על ציר ה-Z השלילי)
         enemyEl.object3D.position.set((Math.random()-0.5)*2, (Math.random()-0.5)*2, -4 - Math.random()*2);
         const boxEl = document.createElement('a-box');
         boxEl.setAttribute('color', gameConfig.colors[Math.floor(Math.random() * gameConfig.colors.length)]);
@@ -101,7 +108,6 @@
         if(!isPlaying) return;
         if(Math.random() < 0.02) spawnEnemy();
         enemies.forEach((e, index) => {
-            // מתקדמים לכיוון המטרה (על ציר ה-Z השלילי לכיוון ה-0)
             e.object3D.position.z += gameConfig.enemySpeedBase;
             if(e.object3D.position.z > 0.1) { 
                 e.parentNode.removeChild(e); enemies.splice(index, 1);
