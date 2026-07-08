@@ -66,7 +66,7 @@
         targetPosition: { x: 0, y: 0, z: 0 },
         cubeScale: "0.2 0.2 0.2",
         colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"],
-        enemySpeedBase: 0.05
+        enemySpeedBase: 0.01
       };
       let isPlaying = false, score = 0, health = 100, targetFound = false, enemies = [];
       const sceneEl = document.querySelector('#scene'), targetAnchor = document.querySelector('#target-anchor'), uiContainer = document.getElementById('ui-container');
@@ -87,7 +87,8 @@
       function spawnEnemy() {
         if(!targetFound || !isPlaying) return;
         const enemyEl = document.createElement('a-entity');
-        enemyEl.object3D.position.set((Math.random()-0.5)*2, (Math.random()-0.5)*2, -2 - Math.random()*2);
+        // מתחילים רחוק מהמצלמה (על ציר ה-Z השלילי)
+        enemyEl.object3D.position.set((Math.random()-0.5)*2, (Math.random()-0.5)*2, -4 - Math.random()*2);
         const boxEl = document.createElement('a-box');
         boxEl.setAttribute('color', gameConfig.colors[Math.floor(Math.random() * gameConfig.colors.length)]);
         boxEl.setAttribute('scale', gameConfig.cubeScale);
@@ -100,8 +101,9 @@
         if(!isPlaying) return;
         if(Math.random() < 0.02) spawnEnemy();
         enemies.forEach((e, index) => {
-            e.object3D.position.z += 0.01;
-            if(e.object3D.position.z > 0.5) { 
+            // מתקדמים לכיוון המטרה (על ציר ה-Z השלילי לכיוון ה-0)
+            e.object3D.position.z += gameConfig.enemySpeedBase;
+            if(e.object3D.position.z > 0.1) { 
                 e.parentNode.removeChild(e); enemies.splice(index, 1);
             }
         });
