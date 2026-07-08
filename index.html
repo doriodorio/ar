@@ -89,6 +89,15 @@
     </a-scene>
 
     <script>
+      // קונפיגורציית פרמטרים - כאן ניתן לשנות את כל ערכי המשחק בקלות
+      const gameConfig = {
+        targetPosition: { x: 0.25, y: 0, z: 0 },
+        asteroidScale: "0.5 0.5 0.5",
+        asteroidColor: "white", // צבע כללי למודל
+        enemySpeedBase: 0.05,
+        enemySpeedRandom: 0.1
+      };
+
       let isPlaying = false;
       let score = 0;
       let health = 100;
@@ -98,7 +107,7 @@
       let enemySpawnTimer = 0;
       let enemySpawnInterval = 2000;
 
-      const TARGET_POINT = new THREE.Vector3(0.25, 0, 0);
+      const TARGET_POINT = new THREE.Vector3(gameConfig.targetPosition.x, gameConfig.targetPosition.y, gameConfig.targetPosition.z);
       const sceneEl = document.querySelector('a-scene');
       const targetAnchor = document.querySelector('#target-anchor');
       const uiContainer = document.getElementById('ui-container');
@@ -158,12 +167,11 @@
         
         const modelEl = document.createElement('a-entity');
         modelEl.setAttribute('gltf-model', '#asteroid-model');
-        // החלת הטקסטורה על המודל
-        modelEl.setAttribute('material', 'src: #rock-texture');
-        modelEl.setAttribute('scale', '0.5 0.5 0.5'); 
+        modelEl.setAttribute('material', 'src: #rock-texture; color: ' + gameConfig.asteroidColor);
+        modelEl.setAttribute('scale', gameConfig.asteroidScale); 
         enemyEl.appendChild(modelEl);
         targetAnchor.appendChild(enemyEl);
-        enemies.push({ el: enemyEl, speed: 0.05 + Math.random() * 0.1 });
+        enemies.push({ el: enemyEl, speed: gameConfig.enemySpeedBase + Math.random() * gameConfig.enemySpeedRandom });
       }
 
       function gameLoop(time) {
