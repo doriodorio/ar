@@ -43,7 +43,7 @@
     <div id="damage-flash"></div>
     <div id="start-screen" class="screen">
       <h1>הגן על המגדל</h1>
-      <p>1. כוון את המצלמה אל התמונה.<br>2. השמד את הקוביות המתקרבות למגדל (הקובייה האדומה המרכזית)!</p>
+      <p>1. כוון את המצלמה אל התמונה.<br>2. השמד את הקוביות בטרם יגיעו למגדל המרכזי!</p>
       <button id="start-btn">הפעל מצלמה</button>
     </div>
     <div id="game-over-screen" class="screen hidden">
@@ -62,8 +62,10 @@
       <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
       <a-light type="directional" position="0 5 5" intensity="1.5"></a-light>
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        <!-- הקובייה המרכזית שמגדירה את אזור ההגנה -->
-        <a-box color="red" scale="0.3 0.3 0.3" opacity="0.6" position="0 0 0"></a-box>
+        <!-- מסגרת יעד מרכזית (מגדל) -->
+        <a-box color="red" scale="0.3 0.3 0.3" opacity="0.3" wireframe="true"></a-box>
+        <!-- מסגרת היקפית לאזור היווצרות האויבים -->
+        <a-box color="cyan" scale="6 6 6" opacity="0.1" wireframe="true"></a-box>
       </a-entity>
     </a-scene>
     <script>
@@ -97,6 +99,7 @@
       function spawnEnemy() {
         if(!targetFound || !isPlaying) return;
         const enemyEl = document.createElement('a-entity');
+        // אויבים מופיעים בגבולות הווירפריי (מרחק 3)
         const angle = Math.random() * Math.PI * 2;
         const dist = 3;
         enemyEl.object3D.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, -3);
@@ -115,7 +118,7 @@
         
         enemies.forEach((e, index) => {
             e.object3D.position.z += gameConfig.enemySpeed;
-            // בדיקה אם הקובייה הגיעה לקובייה המרכזית (מרחק קצר מהאפס)
+            // בדיקה אם הקובייה הגיעה למרכז המגדל
             if(e.object3D.position.z > -0.2) { 
                 e.parentNode.removeChild(e); enemies.splice(index, 1);
                 health -= 10;
@@ -139,8 +142,8 @@
           const intersects = raycaster.intersectObjects(targetAnchor.object3D.children, true);
           if(intersects.length > 0) {
               const el = intersects[0].object.el;
-              // וודא שאנחנו לא מוחקים את הקובייה המרכזית
-              if(el.tagName !== 'A-BOX' || el.getAttribute('color') !== 'red') {
+              // נמנע ממחיקת המבנים הסטטיים
+              if(el.tagName === 'A-BOX' && !el.getAttribute('wireframe')) {
                   el.parentNode.removeChild(el);
                   score += 100; document.getElementById('score-val').innerText = score;
               }
