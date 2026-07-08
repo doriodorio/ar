@@ -56,7 +56,7 @@
 
     <div id="start-screen" class="screen">
       <h1>הגן על המגדל</h1>
-      <p>1. כוון את המצלמה אל התמונה.<br>2. מקם את האסטרואידים בכוונת ולחץ על המסך לירות!</p>
+      <p>1. כוון את המצלמה אל התמונה.<br>2. מקם את הקוביות בכוונת ולחץ על המסך לירות!</p>
       <button id="start-btn">הפעל מצלמה</button>
     </div>
 
@@ -74,11 +74,6 @@
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
-      <a-assets timeout="10000">
-        <a-asset-item id="asteroid-model" src="https://raw.githubusercontent.com/doriodorio/ar/8136d6a51917f3c295d3e1c92aed8e6799df2ee0/3dassets/asteriod.glb"></a-asset-item>
-        <img id="rock-texture" src="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=512">
-      </a-assets>
-
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
@@ -92,8 +87,8 @@
     <script>
       const gameConfig = {
         targetPosition: { x: 0.25, y: 0, z: 0 },
-        asteroidScale: "0.5 0.5 0.5",
-        asteroidColor: "white",
+        cubeScale: "0.4 0.4 0.4",
+        colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"],
         enemySpeedBase: 0.05,
         enemySpeedRandom: 0.1
       };
@@ -136,7 +131,7 @@
         }
       });
 
-      document.getElementById('restart-btn').addEventListener('click', () => { gameOverScreen.classList.remove('hidden'); startGame(); });
+      document.getElementById('restart-btn').addEventListener('click', () => { gameOverScreen.classList.add('hidden'); startGame(); });
 
       function startGame() {
         score = 0; health = 100; enemySpawnInterval = 2000; updateUI();
@@ -179,18 +174,18 @@
         const enemyEl = document.createElement('a-entity');
         enemyEl.object3D.position.set(0.15 + (Math.random()-0.5)*1.25, (Math.random()-0.5)*1.25, 0.75 + (Math.random()-0.5)*1.0);
         
-        // יצירת מודל האסטרואיד
-        const modelEl = document.createElement('a-entity');
-        modelEl.setAttribute('gltf-model', '#asteroid-model');
-        modelEl.setAttribute('material', 'src: #rock-texture; color: ' + gameConfig.asteroidColor);
-        modelEl.setAttribute('scale', gameConfig.asteroidScale); 
-        enemyEl.appendChild(modelEl);
+        // יצירת הקובייה
+        const boxEl = document.createElement('a-box');
+        const color = gameConfig.colors[Math.floor(Math.random() * gameConfig.colors.length)];
+        boxEl.setAttribute('color', color);
+        boxEl.setAttribute('scale', gameConfig.cubeScale); 
+        enemyEl.appendChild(boxEl);
 
-        // יצירת שובל (שובל עשן/אש)
+        // יצירת שובל
         const trailEl = document.createElement('a-entity');
         trailEl.setAttribute('geometry', 'primitive: sphere; radius: 0.03');
-        trailEl.setAttribute('material', 'color: orange; opacity: 0.6; shader: flat');
-        trailEl.setAttribute('position', '0 -0.1 0.1');
+        trailEl.setAttribute('material', 'color: white; opacity: 0.6; shader: flat');
+        trailEl.setAttribute('position', '0 0 0.2');
         enemyEl.appendChild(trailEl);
         
         targetAnchor.appendChild(enemyEl);
