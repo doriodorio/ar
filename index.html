@@ -67,6 +67,7 @@
     </div>
 
     <a-scene 
+      id="scene"
       mindar-image="imageTargetSrc: new_targets.mind; autoStart: false; uiLoading: no; uiError: no;" 
       color-space="sRGB" 
       renderer="colorManagement: true" 
@@ -89,11 +90,10 @@
     </a-scene>
 
     <script>
-      // קונפיגורציית פרמטרים - כאן ניתן לשנות את כל ערכי המשחק בקלות
       const gameConfig = {
         targetPosition: { x: 0.25, y: 0, z: 0 },
         asteroidScale: "0.5 0.5 0.5",
-        asteroidColor: "white", // צבע כללי למודל
+        asteroidColor: "white",
         enemySpeedBase: 0.05,
         enemySpeedRandom: 0.1
       };
@@ -107,8 +107,7 @@
       let enemySpawnTimer = 0;
       let enemySpawnInterval = 2000;
 
-      const TARGET_POINT = new THREE.Vector3(gameConfig.targetPosition.x, gameConfig.targetPosition.y, gameConfig.targetPosition.z);
-      const sceneEl = document.querySelector('a-scene');
+      const sceneEl = document.querySelector('#scene');
       const targetAnchor = document.querySelector('#target-anchor');
       const uiContainer = document.getElementById('ui-container');
       const startScreen = document.getElementById('start-screen');
@@ -121,12 +120,27 @@
 
       targetAnchor.addEventListener("targetFound", () => { targetFound = true; if(isPlaying) uiContainer.classList.remove('hidden'); });
       targetAnchor.addEventListener("targetLost", () => { targetFound = false; uiContainer.classList.add('hidden'); });
-      document.getElementById('start-btn').addEventListener('click', () => { startScreen.classList.add('hidden'); sceneEl.systems["mindar-image-system"].start(); startGame(); });
+
+      document.getElementById('start-btn').addEventListener('click', async () => {
+        try {
+          const mindarSystem = sceneEl.systems["mindar-image-system"];
+          if (mindarSystem) {
+             startScreen.innerHTML = "<h1>טוען מצלמה...</h1>";
+             await mindarSystem.start();
+             startScreen.classList.add('hidden');
+             startGame();
+          }
+        } catch(e) {
+          console.error("שגיאה בהפעלת המצלמה:", e);
+          startScreen.innerHTML = "<h1>שגיאה בהפעלת מצלמה</h1><button onclick='location.reload()'>נסה שוב</button>";
+        }
+      });
+
       document.getElementById('restart-btn').addEventListener('click', () => { gameOverScreen.classList.add('hidden'); startGame(); });
 
       function startGame() {
         score = 0; health = 100; enemySpawnInterval = 2000; updateUI();
-        enemies.forEach(e => e.el.parentNode.removeChild(e.el));
+        enemies.forEach(e => { if(e.el.parentNode) e.el.parentNode.removeChild(e.el); });
         enemies = [];
         isPlaying = true;
         lastTime = performance.now();
@@ -184,9 +198,10 @@
         for(let i = enemies.length - 1; i >= 0; i--) {
             let e = enemies[i];
             let pos = e.el.object3D.position;
-            let dir = new THREE.Vector3().subVectors(TARGET_POINT, pos).normalize();
+            let target = new THREE.Vector3(gameConfig.targetPosition.x, gameConfig.targetPosition.y, gameConfig.targetPosition.z);
+            let dir = new THREE.Vector3().subVectors(target, pos).normalize();
             pos.add(dir.multiplyScalar(e.speed * dt));
-            if(pos.distanceTo(TARGET_POINT) < 0.1) { takeDamage(10); e.el.parentNode.removeChild(e.el); enemies.splice(i, 1); }
+            if(pos.distanceTo(target) < 0.1) { takeDamage(10); e.el.parentNode.removeChild(e.el); enemies.splice(i, 1); }
         }
       }
     </script>
