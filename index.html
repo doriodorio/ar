@@ -14,12 +14,11 @@
       .stat-box { background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #0ff; font-weight: bold; font-size: 1.2rem;}
       #health-bar-container { width: 150px; height: 15px; background: #333; border: 2px solid white; border-radius: 10px; overflow: hidden; margin-top: 5px; }
       #health-fill { width: 100%; height: 100%; background: #0f0; transition: width 0.2s; }
-      #scope-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-      .scope-circle { width: 80px; height: 80px; border: 2px solid rgba(0, 255, 255, 0.7); border-radius: 50%; position: relative; box-shadow: 0 0 15px rgba(0,255,255,0.3) inset, 0 0 15px rgba(0,255,255,0.3); }
-      .scope-line-h { position: absolute; top: 50%; left: -15px; width: 110px; height: 2px; background: rgba(0, 255, 255, 0.7); }
-      .scope-line-v { position: absolute; left: 50%; top: -15px; height: 110px; width: 2px; background: rgba(0, 255, 255, 0.7); }
-      .scope-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 4px; background: red; border-radius: 50%; transition: background-color 0.1s, box-shadow 0.1s, transform 0.1s; }
-      .scope-dot.firing { background-color: white; box-shadow: 0 0 15px white; transform: translate(-50%, -50%) scale(2); }
+      #scope-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; width: 100px; height: 100px; }
+      .scope-circle { width: 80px; height: 80px; border: 2px solid rgba(0, 255, 255, 0.7); border-radius: 50%; position: absolute; top: 10px; left: 10px; box-shadow: 0 0 15px rgba(0,255,255,0.3) inset, 0 0 15px rgba(0,255,255,0.3); }
+      .scope-line-h { position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(0, 255, 255, 0.7); transform: translateY(-50%); }
+      .scope-line-v { position: absolute; left: 50%; top: 0; height: 100%; width: 2px; background: rgba(0, 255, 255, 0.7); transform: translateX(-50%); }
+      .scope-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #ff0000; border-radius: 50%; border: 1px solid white; z-index: 100; box-shadow: 0 0 5px rgba(255,0,0,0.8); }
       #damage-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: red; opacity: 0; transition: opacity 0.1s; pointer-events: none; z-index: 5; }
       .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto; }
       .hidden { display: none !important; }
@@ -35,7 +34,10 @@
         <div class="stat-box">מצב מבנה <div id="health-bar-container"><div id="health-fill"></div></div></div>
       </div>
       <div id="scope-container">
-        <div class="scope-circle"><div class="scope-line-h"></div><div class="scope-line-v"></div><div class="scope-dot"></div></div>
+        <div class="scope-circle"></div>
+        <div class="scope-line-h"></div>
+        <div class="scope-line-v"></div>
+        <div class="scope-dot"></div>
       </div>
     </div>
     <div id="damage-flash"></div>
@@ -91,7 +93,6 @@
       function spawnEnemy() {
         if(!targetFound || !isPlaying) return;
         const enemyEl = document.createElement('a-entity');
-        // מיקומים רחבים יותר שנעים פנימה לכיוון (0,0,0)
         const angle = Math.random() * Math.PI * 2;
         const dist = 3;
         enemyEl.object3D.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, -3);
@@ -109,7 +110,6 @@
         if(Math.random() < 0.03) spawnEnemy();
         
         enemies.forEach((e, index) => {
-            // תנועה לכיוון המרכז (הגדלת Z לכיוון ה-0)
             e.object3D.position.z += gameConfig.enemySpeed;
             if(e.object3D.position.z > 0) { 
                 e.parentNode.removeChild(e); enemies.splice(index, 1);
