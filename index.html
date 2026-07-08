@@ -136,7 +136,7 @@
         }
       });
 
-      document.getElementById('restart-btn').addEventListener('click', () => { gameOverScreen.classList.add('hidden'); startGame(); });
+      document.getElementById('restart-btn').addEventListener('click', () => { gameOverScreen.classList.remove('hidden'); startGame(); });
 
       function startGame() {
         score = 0; health = 100; enemySpawnInterval = 2000; updateUI();
@@ -179,11 +179,20 @@
         const enemyEl = document.createElement('a-entity');
         enemyEl.object3D.position.set(0.15 + (Math.random()-0.5)*1.25, (Math.random()-0.5)*1.25, 0.75 + (Math.random()-0.5)*1.0);
         
+        // יצירת מודל האסטרואיד
         const modelEl = document.createElement('a-entity');
         modelEl.setAttribute('gltf-model', '#asteroid-model');
         modelEl.setAttribute('material', 'src: #rock-texture; color: ' + gameConfig.asteroidColor);
         modelEl.setAttribute('scale', gameConfig.asteroidScale); 
         enemyEl.appendChild(modelEl);
+
+        // יצירת שובל (שובל עשן/אש)
+        const trailEl = document.createElement('a-entity');
+        trailEl.setAttribute('geometry', 'primitive: sphere; radius: 0.03');
+        trailEl.setAttribute('material', 'color: orange; opacity: 0.6; shader: flat');
+        trailEl.setAttribute('position', '0 -0.1 0.1');
+        enemyEl.appendChild(trailEl);
+        
         targetAnchor.appendChild(enemyEl);
         enemies.push({ el: enemyEl, speed: gameConfig.enemySpeedBase + Math.random() * gameConfig.enemySpeedRandom });
       }
