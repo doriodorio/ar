@@ -25,10 +25,13 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.0.3</div>
+    <div id="version-display">גרסה: 1.0.4</div>
 
     <div id="ui-container" class="hidden">
-      <div id="stats-bar"><div class="stat-box">ניקוד: <span id="score-val">0</span></div></div>
+      <div id="stats-bar">
+        <div class="stat-box">ניקוד: <span id="score-val">0</span></div>
+        <div class="stat-box">חיים: <span id="health-val">100</span>%</div>
+      </div>
       <div id="crosshair">
         <div class="crosshair-circle"></div>
         <div class="crosshair-dot"></div>
@@ -45,19 +48,59 @@
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
         <a-box color="white" position="0 0 -0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
-        <!-- המטרה עודכנה למיקום 0.1 0.1 -->
         <a-sphere id="target-sphere" color="blue" position="0 0 0" radius="0.05"></a-sphere>
       </a-entity>
     </a-scene>
 
     <script>
-      let isPlaying = false;
+      let isPlaying = false, score = 0, health = 100;
+      const targetAnchor = document.querySelector('#target-anchor');
+      const targetSphere = document.querySelector('#target-sphere');
+
+      // לוגיקה של אויבים
+      function spawnEnemy() {
+        if(!isPlaying) return;
+        const enemy = document.createElement('a-box');
+        const colors = ['red', 'green', 'blue', 'orange', 'purple'];
+        enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
+        enemy.setAttribute('scale', '0.15 0.15 0.15');
+        
+        // יצירה במרחק רנדומלי מהתמונה
+        const x = (Math.random() - 0.5) * 2;
+        const y = (Math.random() - 0.5) * 2;
+        const z = -2; // הדופן הרחוקה
+        enemy.setAttribute('position', `${x} ${y} ${z}`);
+        
+        targetAnchor.appendChild(enemy);
+
+        // תנועה למטרה
+        const interval = setInterval(() => {
+          if(!isPlaying) return clearInterval(interval);
+          const pos = enemy.getAttribute('position');
+          const targetPos = targetSphere.getAttribute('position');
+          
+          if(Math.abs(pos.x - targetPos.x) < 0.1 && Math.abs(pos.y - targetPos.y) < 0.1) {
+            health -= 10;
+            document.getElementById('health-val').innerText = health;
+            enemy.remove();
+            clearInterval(interval);
+            if(health <= 0) alert("המשחק נגמר!");
+          } else {
+            enemy.setAttribute('position', {
+              x: pos.x + (targetPos.x - pos.x) * 0.02,
+              y: pos.y + (targetPos.y - pos.y) * 0.02,
+              z: pos.z + (targetPos.z - pos.z) * 0.02
+            });
+          }
+        }, 100);
+      }
 
       document.getElementById('start-btn').addEventListener('click', async () => {
         await document.getElementById('scene').systems["mindar-image-system"].start();
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('ui-container').classList.remove('hidden');
         isPlaying = true;
+        setInterval(spawnEnemy, 2000);
       });
     </script>
   </body>
