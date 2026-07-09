@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.0.5</div>
+    <div id="version-display">גרסה: 1.0.7</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -44,7 +44,11 @@
     </div>
 
     <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera id="camera" position="0 0 0" look-controls="enabled: false">
+        <!-- הגדלנו את רדיוס ה-raycaster כדי שהפגיעה תהיה קלה יותר -->
+        <a-cursor raycaster="objects: .enemy; far: 10; interval: 100"></a-cursor>
+      </a-camera>
+      
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
         <a-box color="white" position="0 0 -0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
@@ -61,14 +65,23 @@
         if(!isPlaying) return;
         const enemy = document.createElement('a-box');
         enemy.classList.add('enemy');
+        // הוספנו תיבת התנגשות גדולה יותר (Hitbox) בתוך האויב
+        enemy.setAttribute('scale', '0.3 0.3 0.3');
+        enemy.setAttribute('opacity', '0.8');
+        
         const colors = ['red', 'green', 'blue', 'orange', 'purple'];
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
-        enemy.setAttribute('scale', '0.15 0.15 0.15');
         
         const x = (Math.random() - 0.5) * 2;
         const y = (Math.random() - 0.5) * 2;
         const z = -2;
         enemy.setAttribute('position', `${x} ${y} ${z}`);
+        
+        enemy.addEventListener('click', () => {
+          enemy.remove();
+          score += 10;
+          document.getElementById('score-val').innerText = score;
+        });
         
         targetAnchor.appendChild(enemy);
 
@@ -92,22 +105,6 @@
           }
         }, 100);
       }
-
-      // טיפול בלחיצה לפי המיקום במרכז המסך (הכוונת)
-      window.addEventListener('click', () => {
-        if(!isPlaying) return;
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-        const elements = document.elementsFromPoint(centerX, centerY);
-        
-        elements.forEach(el => {
-          if(el.tagName === 'A-BOX' && el.classList.contains('enemy')) {
-            el.remove();
-            score += 10;
-            document.getElementById('score-val').innerText = score;
-          }
-        });
-      });
 
       document.getElementById('start-btn').addEventListener('click', async () => {
         await document.getElementById('scene').systems["mindar-image-system"].start();
