@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.1.5</div>
+    <div id="version-display">גרסה: 1.1.6</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -73,7 +73,8 @@
         const enemy = document.createElement('a-box');
         const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#aa44ff'];
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
-        enemy.setAttribute('scale', '0.15 0.15 0.15');
+        // הגודל הוקטן לחצי (מ-0.15 ל-0.075)
+        enemy.setAttribute('scale', '0.075 0.075 0.075');
         
         // מיקום מקומי ביחס ל-Anchor (בדיוק על הדופן הקדמית של הקוביה הלבנה, בולט החוצה)
         const x = (Math.random() - 0.5) * 1.5;
