@@ -9,129 +9,109 @@
     
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; }
-      
       #ui-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
       #stats-bar { display: flex; justify-content: space-between; padding: 20px; color: white; text-shadow: 2px 2px 4px black; }
       .stat-box { background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #0ff; font-weight: bold; font-size: 1.2rem;}
-      #health-bar-container { width: 150px; height: 15px; background: #333; border: 2px solid white; border-radius: 10px; overflow: hidden; margin-top: 5px; }
-      #health-fill { width: 100%; height: 100%; background: #0f0; transition: width 0.2s; }
       
-      #scope-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; width: 100px; height: 100px; }
-      .scope-circle { width: 80px; height: 80px; border: 2px solid rgba(0, 255, 255, 0.7); border-radius: 50%; position: absolute; top: 10px; left: 10px; box-shadow: 0 0 15px rgba(0,255,255,0.3) inset, 0 0 15px rgba(0,255,255,0.3); }
-      .scope-line-h { position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(0, 255, 255, 0.7); transform: translateY(-50%); }
-      .scope-line-v { position: absolute; left: 50%; top: 0; height: 100%; width: 2px; background: rgba(0, 255, 255, 0.7); transform: translateX(-50%); }
-      .scope-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #ff0000; border-radius: 50%; border: 1px solid white; z-index: 100; box-shadow: 0 0 5px rgba(255,0,0,0.8); }
-      
+      /* Crosshair */
+      #crosshair { position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15; }
+      .crosshair-circle { width: 60px; height: 60px; border: 2px solid rgba(255, 255, 0, 0.8); border-radius: 50%; position: absolute; top: 20px; left: 20px; }
+      .crosshair-dot { width: 8px; height: 8px; background: red; border-radius: 50%; position: absolute; top: 46px; left: 46px; }
+
       .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto; }
       .hidden { display: none !important; }
-      h1 { color: #0ff; font-size: 2.5rem; margin-bottom: 10px; }
-      p { font-size: 1.2rem; margin-bottom: 30px; }
-      button { padding: 15px 40px; font-size: 1.5rem; background: #0ff; color: black; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; }
+      button { padding: 15px 40px; font-size: 1.5rem; background: #0ff; border: none; border-radius: 30px; cursor: pointer; }
     </style>
   </head>
   <body>
 
     <div id="ui-container" class="hidden">
-      <div id="stats-bar">
-        <div class="stat-box">ניקוד: <span id="score-val">0</span></div>
-        <div class="stat-box">מצב מבנה <div id="health-bar-container"><div id="health-fill"></div></div></div>
-      </div>
-      <div id="scope-container">
-        <div class="scope-circle"></div>
-        <div class="scope-line-h"></div>
-        <div class="scope-line-v"></div>
-        <div class="scope-dot"></div>
+      <div id="stats-bar"><div class="stat-box">ניקוד: <span id="score-val">0</span></div></div>
+      <div id="crosshair">
+        <div class="crosshair-circle"></div>
+        <div class="crosshair-dot"></div>
       </div>
     </div>
 
     <div id="start-screen" class="screen">
       <h1>הגן על המגדל</h1>
-      <p>1. כוון את המצלמה אל התמונה.<br>2. לחץ על הקוביות כדי להשמיד אותן!</p>
-      <button id="start-btn">הפעל מצלמה</button>
+      <p>כוון את הצלב על הקוביות ולחץ על המסך!</p>
+      <button id="start-btn">התחל משחק</button>
     </div>
 
-    <a-scene 
-      id="scene"
-      mindar-image="imageTargetSrc: new_targets.mind; autoStart: false; uiLoading: no; uiError: no;" 
-      color-space="sRGB" 
-      renderer="colorManagement: true" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
-      
-      <!-- מצלמה עם raycaster לזיהוי לחיצות -->
-      <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .enemy" cursor="rayOrigin: mouse"></a-camera>
-
-      <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
-      <a-light type="directional" position="0 5 5" intensity="1.5"></a-light>
-
+    <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        <a-plane color="yellow" rotation="0 0 0" scale="1 1 1" wireframe="true" width="1" height="1"></a-plane>
+        <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
         <a-box color="white" position="0 0 -0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
         <a-sphere id="target-sphere" color="blue" position="0.33 0 0" radius="0.05"></a-sphere>
       </a-entity>
     </a-scene>
 
     <script>
-      const gameConfig = { cubeScale: "0.2 0.2 0.2", enemySpeed: 0.005 };
-      let isPlaying = false, score = 0, targetFound = false, enemies = [];
-      const sceneEl = document.querySelector('#scene'), targetAnchor = document.querySelector('#target-anchor'), uiContainer = document.getElementById('ui-container');
+      let score = 0, isPlaying = false, enemies = [];
+      const camera = document.getElementById('camera');
       const targetSphere = document.getElementById('target-sphere');
-      const scoreVal = document.getElementById('score-val');
-      
-      document.getElementById('start-btn').addEventListener('click', async () => {
-        try {
-          await sceneEl.systems["mindar-image-system"].start();
-          document.getElementById('start-screen').classList.add('hidden');
-          isPlaying = true;
-          requestAnimationFrame(gameLoop);
-        } catch(e) { console.error(e); }
+
+      // לחיצה על המסך להשמדה
+      window.addEventListener('click', () => {
+        if (!isPlaying) return;
+        
+        const vector = new THREE.Vector3();
+        const screenCenter = new THREE.Vector2(0, 0); // מרכז המסך ב-NDC
+        
+        enemies.forEach((enemy, index) => {
+          vector.setFromMatrixPosition(enemy.object3D.matrixWorld);
+          vector.project(camera.getObject3D('camera')); // הקרנה למרחב ה-2D
+          
+          // בדיקת מרחק מהמרכז (הצלב)
+          if (vector.distanceTo(new THREE.Vector3(0, 0, vector.z)) < 0.15) {
+            score += 10;
+            document.getElementById('score-val').innerText = score;
+            enemy.parentNode.removeChild(enemy);
+            enemies.splice(index, 1);
+          }
+        });
       });
 
       function spawnEnemy() {
-        if(!targetFound || !isPlaying) return;
+        if (!isPlaying) return;
         const enemyEl = document.createElement('a-entity');
-        enemyEl.setAttribute('class', 'enemy');
+        const boxEl = document.createElement('a-box');
+        boxEl.setAttribute('color', "#ff0000");
+        boxEl.setAttribute('scale', "0.2 0.2 0.2");
+        enemyEl.appendChild(boxEl);
         
         const x = (Math.random() - 0.5) * 1.5;
         const y = (Math.random() - 0.5) * 1.5;
-        const z = -Math.random() * 1.5; 
+        const z = -Math.random() * 1.5;
         enemyEl.object3D.position.set(x, y, z);
         
-        const boxEl = document.createElement('a-box');
-        boxEl.setAttribute('color', "#00ffff");
-        boxEl.setAttribute('scale', gameConfig.cubeScale);
-        enemyEl.appendChild(boxEl);
-        
-        // הוספת לוגיקת לחיצה
-        enemyEl.addEventListener('click', () => {
-            score += 10;
-            scoreVal.innerText = score;
-            enemyEl.parentNode.removeChild(enemyEl);
-            enemies = enemies.filter(e => e !== enemyEl);
-        });
-
-        targetAnchor.appendChild(enemyEl);
+        document.getElementById('target-anchor').appendChild(enemyEl);
         enemies.push(enemyEl);
       }
 
       function gameLoop() {
-        if(!isPlaying) return;
-        if(Math.random() < 0.03) spawnEnemy();
+        if (!isPlaying) return;
+        if (Math.random() < 0.03) spawnEnemy();
         
         const targetPos = new THREE.Vector3();
         targetSphere.object3D.getWorldPosition(targetPos);
         
-        enemies.forEach((e) => {
-            const enemyPos = e.object3D.position;
-            const dir = new THREE.Vector3().subVectors(targetPos, enemyPos).normalize();
-            e.object3D.position.add(dir.multiplyScalar(gameConfig.enemySpeed));
+        enemies.forEach(e => {
+          const dir = new THREE.Vector3().subVectors(targetPos, e.object3D.position).normalize();
+          e.object3D.position.add(dir.multiplyScalar(0.005));
         });
-        
         requestAnimationFrame(gameLoop);
       }
 
-      targetAnchor.addEventListener("targetFound", () => { targetFound = true; uiContainer.classList.remove('hidden'); });
-      targetAnchor.addEventListener("targetLost", () => { targetFound = false; uiContainer.classList.add('hidden'); });
+      document.getElementById('start-btn').addEventListener('click', async () => {
+        await document.getElementById('scene').systems["mindar-image-system"].start();
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('ui-container').classList.remove('hidden');
+        isPlaying = true;
+        gameLoop();
+      });
     </script>
   </body>
 </html>
