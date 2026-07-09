@@ -50,7 +50,7 @@
 
     <div id="start-screen" class="screen">
       <h1>הגן על המגדל</h1>
-      <p>1. כוון את המצלמה אל התמונה.<br>2. השמד את הקוביות בטרם יגיעו למגדל המרכזי (המסומן באדום)!</p>
+      <p>1. כוון את המצלמה אל התמונה.<br>2. השמד את הקוביות בטרם יגיעו למגדל המרכזי!</p>
       <button id="start-btn">הפעל מצלמה</button>
     </div>
 
@@ -74,8 +74,10 @@
       <a-light type="directional" position="0 5 5" intensity="1.5"></a-light>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        <!-- מסגרת יעד מרכזית (מגדל) בלבד - זה מזהה רק את המטרה -->
+        <!-- מסגרת יעד מרכזית (מגדל) -->
         <a-box color="red" scale="0.3 0.3 0.3" opacity="0.3" wireframe="true"></a-box>
+        <!-- מסגרת גבולות צהובה סביב התמונה המזוהה -->
+        <a-plane color="yellow" rotation="-90 0 0" scale="1 1 1" wireframe="true" width="1" height="1"></a-plane>
       </a-entity>
     </a-scene>
 
@@ -110,7 +112,6 @@
       function spawnEnemy() {
         if(!targetFound || !isPlaying) return;
         const enemyEl = document.createElement('a-entity');
-        // אויבים מופיעים בגבולות הווירפריי (מרחק 3)
         const angle = Math.random() * Math.PI * 2;
         const dist = 3;
         enemyEl.object3D.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, -3);
@@ -129,7 +130,6 @@
         
         enemies.forEach((e, index) => {
             e.object3D.position.z += gameConfig.enemySpeed;
-            // בדיקה אם הקובייה הגיעה למרכז המגדל
             if(e.object3D.position.z > -0.2) { 
                 e.parentNode.removeChild(e); enemies.splice(index, 1);
                 health -= 10;
@@ -153,7 +153,6 @@
           const intersects = raycaster.intersectObjects(targetAnchor.object3D.children, true);
           if(intersects.length > 0) {
               const el = intersects[0].object.el;
-              // נמנע ממחיקת המבנה המרכזי
               if(el.tagName === 'A-BOX' && !el.getAttribute('wireframe')) {
                   el.parentNode.removeChild(el);
                   score += 100; document.getElementById('score-val').innerText = score;
