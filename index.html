@@ -22,8 +22,6 @@
       .scope-line-v { position: absolute; left: 50%; top: 0; height: 100%; width: 2px; background: rgba(0, 255, 255, 0.7); transform: translateX(-50%); }
       .scope-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #ff0000; border-radius: 50%; border: 1px solid white; z-index: 100; box-shadow: 0 0 5px rgba(255,0,0,0.8); }
       
-      #damage-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: red; opacity: 0; transition: opacity 0.1s; pointer-events: none; z-index: 5; }
-      
       .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto; }
       .hidden { display: none !important; }
       h1 { color: #0ff; font-size: 2.5rem; margin-bottom: 10px; }
@@ -46,18 +44,10 @@
       </div>
     </div>
 
-    <div id="damage-flash"></div>
-
     <div id="start-screen" class="screen">
       <h1>הגן על המגדל</h1>
       <p>1. כוון את המצלמה אל התמונה.<br>2. השמד את הקוביות בטרם יגיעו למגדל המרכזי!</p>
       <button id="start-btn">הפעל מצלמה</button>
-    </div>
-
-    <div id="game-over-screen" class="screen hidden">
-      <h1 style="color: red;">כישלון קריטי</h1>
-      <h2>ניקוד סופי: <span id="final-score-val">0</span></h2>
-      <button id="restart-btn" style="margin-top: 20px;">נסה שוב</button>
     </div>
 
     <a-scene 
@@ -74,54 +64,41 @@
       <a-light type="directional" position="0 5 5" intensity="1.5"></a-light>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
-        <!-- מגדל מרכזי -->
-        <a-box color="red" scale="0.3 0.3 0.3" opacity="0.3" wireframe="true"></a-box>
-        <!-- מסגרת גבולות צהובה אנכית -->
+        <!-- המשטח המזוהה -->
         <a-plane color="yellow" rotation="0 0 0" scale="1 1 1" wireframe="true" width="1" height="1"></a-plane>
+        
+        <!-- אזור יצירת האויבים - תיבה בווייר-פריים שמתחילה מהמשטח ועמוקה פי 2 -->
+        <!-- המיקום Z הוא -1 כדי שהחלק האחורי יחפוף למשטח (Z=0) -->
+        <a-box color="white" position="0 0 -1" scale="2 2 2" wireframe="true" opacity="0.5"></a-box>
       </a-entity>
     </a-scene>
 
     <script>
-      const gameConfig = {
-        cubeScale: "0.2 0.2 0.2",
-        colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"],
-        enemySpeed: 0.005
-      };
-      let isPlaying = false, score = 0, health = 100, targetFound = false, enemies = [];
+      const gameConfig = { cubeScale: "0.2 0.2 0.2", enemySpeed: 0.005 };
+      let isPlaying = false, score = 0, targetFound = false, enemies = [];
       const sceneEl = document.querySelector('#scene'), targetAnchor = document.querySelector('#target-anchor'), uiContainer = document.getElementById('ui-container');
       
       document.getElementById('start-btn').addEventListener('click', async () => {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-          stream.getTracks().forEach(track => track.stop());
           await sceneEl.systems["mindar-image-system"].start();
           document.getElementById('start-screen').classList.add('hidden');
-          startGame();
-        } catch(e) { 
-          console.error("Camera error:", e);
-          document.getElementById('start-screen').innerHTML = "<h1>שגיאה במצלמה</h1><p>אנא וודא שהרשאת מצלמה מאושרת.</p><button onclick='location.reload()'>נסה שוב</button>";
-        }
+          isPlaying = true;
+          requestAnimationFrame(gameLoop);
+        } catch(e) { console.error(e); }
       });
-
-      function startGame() {
-        isPlaying = true; score = 0; health = 100;
-        document.getElementById('health-fill').style.width = "100%";
-        requestAnimationFrame(gameLoop);
-      }
 
       function spawnEnemy() {
         if(!targetFound || !isPlaying) return;
         const enemyEl = document.createElement('a-entity');
-        // יצירה במיקום ישר מול המשתמש ללא רוטציה מיותרת
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 2.5;
-        enemyEl.object3D.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, -0.5);
+        // יצירה בתוך טווח התיבה: X ו-Y בין 1- ל-1, Z בין 0 ל-2-
+        const x = (Math.random() - 0.5) * 2;
+        const y = (Math.random() - 0.5) * 2;
+        const z = -Math.random() * 2; 
+        enemyEl.object3D.position.set(x, y, z);
         
         const boxEl = document.createElement('a-box');
-        boxEl.setAttribute('color', gameConfig.colors[Math.floor(Math.random() * gameConfig.colors.length)]);
+        boxEl.setAttribute('color', "#00ffff");
         boxEl.setAttribute('scale', gameConfig.cubeScale);
-        // וודא שהקוביה לא מסובבת
-        boxEl.setAttribute('rotation', "0 0 0");
         enemyEl.appendChild(boxEl);
         targetAnchor.appendChild(enemyEl);
         enemies.push(enemyEl);
@@ -130,39 +107,9 @@
       function gameLoop() {
         if(!isPlaying) return;
         if(Math.random() < 0.03) spawnEnemy();
-        
-        enemies.forEach((e, index) => {
-            // תנועה ישרה לעבר המרכז
-            e.object3D.position.z += gameConfig.enemySpeed;
-            if(e.object3D.position.z > -0.2) { 
-                e.parentNode.removeChild(e); enemies.splice(index, 1);
-                health -= 10;
-                document.getElementById('health-fill').style.width = health + "%";
-                if(health <= 0) endGame();
-            }
-        });
         requestAnimationFrame(gameLoop);
       }
 
-      function endGame() {
-          isPlaying = false;
-          document.getElementById('game-over-screen').classList.remove('hidden');
-          document.getElementById('final-score-val').innerText = score;
-      }
-
-      window.addEventListener('mousedown', () => {
-          if(!isPlaying) return;
-          const raycaster = new THREE.Raycaster();
-          raycaster.setFromCamera(new THREE.Vector2(0,0), sceneEl.camera);
-          const intersects = raycaster.intersectObjects(targetAnchor.object3D.children, true);
-          if(intersects.length > 0) {
-              const el = intersects[0].object.el;
-              if(el.tagName === 'A-BOX' && !el.getAttribute('wireframe')) {
-                  el.parentNode.removeChild(el);
-                  score += 100; document.getElementById('score-val').innerText = score;
-              }
-          }
-      });
       targetAnchor.addEventListener("targetFound", () => { targetFound = true; uiContainer.classList.remove('hidden'); });
       targetAnchor.addEventListener("targetLost", () => { targetFound = false; uiContainer.classList.add('hidden'); });
     </script>
