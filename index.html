@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.1.6</div>
+    <div id="version-display">גרסה: 1.1.7</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -73,16 +73,23 @@
         const enemy = document.createElement('a-box');
         const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#aa44ff'];
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
-        // הגודל הוקטן לחצי (מ-0.15 ל-0.075)
+        // הגודל הוקטן לחצי
         enemy.setAttribute('scale', '0.075 0.075 0.075');
         
+        // הוספת מסגרת (wireframe) שחורה לקוביה
+        const wireframe = document.createElement('a-entity');
+        wireframe.setAttribute('geometry', 'primitive: box');
+        wireframe.setAttribute('material', 'color: black; wireframe: true');
+        wireframe.setAttribute('scale', '1.02 1.02 1.02'); // טיפה יותר גדול כדי שלא יתנגש עם הצבע המלא
+        enemy.appendChild(wireframe);
+
         // מיקום מקומי ביחס ל-Anchor (בדיוק על הדופן הקדמית של הקוביה הלבנה, בולט החוצה)
         const x = (Math.random() - 0.5) * 1.5;
         const y = (Math.random() - 0.5) * 1.5;
         const z = 1.5; // Z חיובי: יוצא מתוך התמונה לכיוון המשתמש
         enemy.setAttribute('position', `${x} ${y} ${z}`);
         
-        // קו מסלול לתצוגה (דיבוג) - עכשיו הקו ילך מ-1.5 פנימה ל-0
+        // קו מסלול לתצוגה (דיבוג)
         const pathLine = document.createElement('a-entity');
         pathLine.setAttribute('line', `start: ${x} ${y} ${z}; end: 0 0 0; color: yellow; opacity: 0.6`);
         
@@ -140,7 +147,8 @@
           
           // תנועה לעבר המרכז בסביבה המקומית
           const dir = new THREE.Vector3().subVectors(targetLocalPos, enemyPos).normalize();
-          enemyData.box.object3D.position.add(dir.multiplyScalar(0.02)); // מהירות התקדמות
+          // הורדת המהירות לחצי (מ-0.02 ל-0.01)
+          enemyData.box.object3D.position.add(dir.multiplyScalar(0.01));
         }
         
         requestAnimationFrame(gameLoop);
