@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.1.4</div>
+    <div id="version-display">גרסה: 1.1.5</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -48,10 +48,10 @@
       
       <!-- Anchor מוחלק. כל האובייקטים יישבו בתוכו כדי לנוע יחד עם התמונה -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-        <!-- משטח צהוב (המטרה) -->
+        <!-- משטח צהוב (המטרה על התמונה) -->
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
-        <!-- קוביית הגבולות הלבנה להיווצרות אויבים -->
-        <a-box color="white" position="0 0 -0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
+        <!-- קוביית הגבולות הלבנה להיווצרות אויבים - כעת בולטת החוצה (Z חיובי) -->
+        <a-box color="white" position="0 0 0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
         <!-- מטרה מרכזית גלויה כדי לראות את יעד הקוביות -->
         <a-sphere id="target-sphere" color="blue" position="0 0 0" radius="0.05" visible="true"></a-sphere>
       </a-entity>
@@ -75,13 +75,13 @@
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
         enemy.setAttribute('scale', '0.15 0.15 0.15');
         
-        // מיקום מקומי ביחס ל-Anchor (בדיוק על הדופן האחורית של הקוביה הלבנה)
+        // מיקום מקומי ביחס ל-Anchor (בדיוק על הדופן הקדמית של הקוביה הלבנה, בולט החוצה)
         const x = (Math.random() - 0.5) * 1.5;
         const y = (Math.random() - 0.5) * 1.5;
-        const z = -1.5; // מאחורי התמונה, בקצה הקוביה הלבנה
+        const z = 1.5; // Z חיובי: יוצא מתוך התמונה לכיוון המשתמש
         enemy.setAttribute('position', `${x} ${y} ${z}`);
         
-        // קו מסלול לתצוגה (דיבוג)
+        // קו מסלול לתצוגה (דיבוג) - עכשיו הקו ילך מ-1.5 פנימה ל-0
         const pathLine = document.createElement('a-entity');
         pathLine.setAttribute('line', `start: ${x} ${y} ${z}; end: 0 0 0; color: yellow; opacity: 0.6`);
         
