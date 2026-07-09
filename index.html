@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.0.7</div>
+    <div id="version-display">גרסה: 1.0.9</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -44,73 +44,75 @@
     </div>
 
     <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-camera id="camera" position="0 0 0" look-controls="enabled: false">
-        <!-- הגדלנו את רדיוס ה-raycaster כדי שהפגיעה תהיה קלה יותר -->
-        <a-cursor raycaster="objects: .enemy; far: 10; interval: 100"></a-cursor>
-      </a-camera>
+      <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
       
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
-        <a-box color="white" position="0 0 -0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
         <a-sphere id="target-sphere" color="blue" position="0 0 0" radius="0.05"></a-sphere>
       </a-entity>
     </a-scene>
 
     <script>
-      let isPlaying = false, score = 0, health = 100;
+      let isPlaying = false, score = 0, health = 100, enemies = [];
+      const sceneEl = document.querySelector('a-scene');
+      const cameraEl = document.querySelector('#camera');
       const targetAnchor = document.querySelector('#target-anchor');
       const targetSphere = document.querySelector('#target-sphere');
 
       function spawnEnemy() {
         if(!isPlaying) return;
         const enemy = document.createElement('a-box');
-        enemy.classList.add('enemy');
-        // הוספנו תיבת התנגשות גדולה יותר (Hitbox) בתוך האויב
-        enemy.setAttribute('scale', '0.3 0.3 0.3');
-        enemy.setAttribute('opacity', '0.8');
-        
         const colors = ['red', 'green', 'blue', 'orange', 'purple'];
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
+        enemy.setAttribute('scale', '0.2 0.2 0.2');
         
         const x = (Math.random() - 0.5) * 2;
         const y = (Math.random() - 0.5) * 2;
         const z = -2;
         enemy.setAttribute('position', `${x} ${y} ${z}`);
-        
-        enemy.addEventListener('click', () => {
-          enemy.remove();
-          score += 10;
-          document.getElementById('score-val').innerText = score;
-        });
-        
         targetAnchor.appendChild(enemy);
+        enemies.push(enemy);
+      }
 
-        const interval = setInterval(() => {
-          if(!isPlaying || !enemy.parentNode) return clearInterval(interval);
-          const pos = enemy.getAttribute('position');
-          const targetPos = targetSphere.getAttribute('position');
+      window.addEventListener('click', () => {
+        if(!isPlaying) return;
+        const camera = cameraEl.getObject3D('camera');
+        const vector = new THREE.Vector3();
+        
+        // עוברים על כל האויבים ובודקים מי מהם קרוב למרכז המסך (0,0)
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          vector.setFromMatrixPosition(enemies[i].object3D.matrixWorld);
+          vector.project(camera);
           
-          if(Math.abs(pos.x - targetPos.x) < 0.1 && Math.abs(pos.y - targetPos.y) < 0.1) {
-            health -= 10;
-            document.getElementById('health-val').innerText = health;
-            enemy.remove();
-            clearInterval(interval);
-            if(health <= 0) alert("המשחק נגמר!");
-          } else {
-            enemy.setAttribute('position', {
-              x: pos.x + (targetPos.x - pos.x) * 0.02,
-              y: pos.y + (targetPos.y - pos.y) * 0.02,
-              z: pos.z + (targetPos.z - pos.z) * 0.02
-            });
+          // רדיוס פגיעה 0.25 (סלחני מספיק לטלפון)
+          if (Math.sqrt(vector.x * vector.x + vector.y * vector.y) < 0.25) {
+            enemies[i].remove();
+            enemies.splice(i, 1);
+            score += 10;
+            document.getElementById('score-val').innerText = score;
           }
-        }, 100);
+        }
+      });
+
+      function gameLoop() {
+        if (!isPlaying) return;
+        const targetPos = new THREE.Vector3();
+        targetSphere.object3D.getWorldPosition(targetPos);
+        
+        enemies.forEach(e => {
+          const enemyPos = e.object3D.position;
+          const dir = new THREE.Vector3().subVectors(targetPos, enemyPos).normalize();
+          e.object3D.position.add(dir.multiplyScalar(0.01));
+        });
+        requestAnimationFrame(gameLoop);
       }
 
       document.getElementById('start-btn').addEventListener('click', async () => {
-        await document.getElementById('scene').systems["mindar-image-system"].start();
+        await sceneEl.systems["mindar-image-system"].start();
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('ui-container').classList.remove('hidden');
         isPlaying = true;
+        gameLoop();
         setInterval(spawnEnemy, 2000);
       });
     </script>
