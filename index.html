@@ -12,6 +12,7 @@
       #ui-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
       #stats-bar { display: flex; justify-content: space-between; padding: 20px; color: white; text-shadow: 2px 2px 4px black; }
       .stat-box { background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #0ff; font-weight: bold; font-size: 1.2rem;}
+      #version-display { position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); padding: 5px; font-size: 0.8rem; z-index: 100; }
       
       #crosshair { position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15; }
       .crosshair-circle { width: 60px; height: 60px; border: 2px solid rgba(255, 255, 0, 0.8); border-radius: 50%; position: absolute; top: 20px; left: 20px; }
@@ -23,6 +24,8 @@
     </style>
   </head>
   <body>
+
+    <div id="version-display">גרסה: 1.0.3</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar"><div class="stat-box">ניקוד: <span id="score-val">0</span></div></div>
@@ -42,8 +45,8 @@
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
         <a-box color="white" position="0 0 -0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
-        <!-- שינוי מיקום המטרה לנקודה ברורה יותר -->
-        <a-sphere id="target-sphere" color="blue" position="0.25 0.25 0" radius="0.05"></a-sphere>
+        <!-- המטרה עודכנה למיקום 0.1 0.1 -->
+        <a-sphere id="target-sphere" color="blue" position="0.1 0.1 0" radius="0.05"></a-sphere>
       </a-entity>
     </a-scene>
 
