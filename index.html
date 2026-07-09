@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.1.0</div>
+    <div id="version-display">גרסה: 1.1.1</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -46,7 +46,6 @@
     <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false; uiLoading: #loading; uiScanning: #scanning;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
       
-      <!-- הוספנו תכונות החלקה (smooth) לשיפור היציבות -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
         <a-sphere id="target-sphere" color="blue" position="0 0 0" radius="0.05"></a-sphere>
@@ -101,7 +100,8 @@
         enemies.forEach(e => {
           const enemyPos = e.object3D.position;
           const dir = new THREE.Vector3().subVectors(targetPos, enemyPos).normalize();
-          e.object3D.position.add(dir.multiplyScalar(0.01));
+          // הגברנו את המהירות מ-0.01 ל-0.03
+          e.object3D.position.add(dir.multiplyScalar(0.03));
         });
         requestAnimationFrame(gameLoop);
       }
