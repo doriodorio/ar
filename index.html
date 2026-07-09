@@ -35,7 +35,6 @@
 
     <div id="start-screen" class="screen">
       <h1>הגן על המגדל</h1>
-      <p>כוון את הצלב על הקוביות ולחץ על המסך!</p>
       <button id="start-btn">התחל משחק</button>
     </div>
 
@@ -49,68 +48,13 @@
     </a-scene>
 
     <script>
-      let score = 0, isPlaying = false, enemies = [];
-      const camera = document.getElementById('camera');
-      const targetSphere = document.getElementById('target-sphere');
-
-      // לחיצה על המסך להשמדה
-      window.addEventListener('click', () => {
-        if (!isPlaying) return;
-        
-        const vector = new THREE.Vector3();
-        const screenCenter = new THREE.Vector2(0, 0); // מרכז המסך ב-NDC
-        
-        enemies.forEach((enemy, index) => {
-          vector.setFromMatrixPosition(enemy.object3D.matrixWorld);
-          vector.project(camera.getObject3D('camera')); // הקרנה למרחב ה-2D
-          
-          // בדיקת מרחק מהמרכז (הצלב)
-          if (vector.distanceTo(new THREE.Vector3(0, 0, vector.z)) < 0.15) {
-            score += 10;
-            document.getElementById('score-val').innerText = score;
-            enemy.parentNode.removeChild(enemy);
-            enemies.splice(index, 1);
-          }
-        });
-      });
-
-      function spawnEnemy() {
-        if (!isPlaying) return;
-        const enemyEl = document.createElement('a-entity');
-        const boxEl = document.createElement('a-box');
-        boxEl.setAttribute('color', "#ff0000");
-        boxEl.setAttribute('scale', "0.2 0.2 0.2");
-        enemyEl.appendChild(boxEl);
-        
-        const x = (Math.random() - 0.5) * 1.5;
-        const y = (Math.random() - 0.5) * 1.5;
-        const z = -Math.random() * 1.5;
-        enemyEl.object3D.position.set(x, y, z);
-        
-        document.getElementById('target-anchor').appendChild(enemyEl);
-        enemies.push(enemyEl);
-      }
-
-      function gameLoop() {
-        if (!isPlaying) return;
-        if (Math.random() < 0.03) spawnEnemy();
-        
-        const targetPos = new THREE.Vector3();
-        targetSphere.object3D.getWorldPosition(targetPos);
-        
-        enemies.forEach(e => {
-          const dir = new THREE.Vector3().subVectors(targetPos, e.object3D.position).normalize();
-          e.object3D.position.add(dir.multiplyScalar(0.005));
-        });
-        requestAnimationFrame(gameLoop);
-      }
+      let isPlaying = false;
 
       document.getElementById('start-btn').addEventListener('click', async () => {
         await document.getElementById('scene').systems["mindar-image-system"].start();
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('ui-container').classList.remove('hidden');
         isPlaying = true;
-        gameLoop();
       });
     </script>
   </body>
