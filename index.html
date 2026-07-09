@@ -67,9 +67,9 @@
         <!-- המשטח המזוהה -->
         <a-plane color="yellow" rotation="0 0 0" scale="1 1 1" wireframe="true" width="1" height="1"></a-plane>
         
-        <!-- אזור יצירת האויבים - תיבה בווייר-פריים שמתחילה מהמשטח ועמוקה פי 2 -->
-        <!-- המיקום Z הוא -1 כדי שהחלק האחורי יחפוף למשטח (Z=0) -->
-        <a-box color="white" position="0 0 -1" scale="2 2 2" wireframe="true" opacity="0.5"></a-box>
+        <!-- אזור יצירת האויבים - תיבה בווייר-פריים שמתחילה מהמשטח ועמוקה פי 1.5 -->
+        <!-- המיקום Z הוא 0.75- כדי שהחלק האחורי יחפוף למשטח (Z=0) בעומק של 1.5 -->
+        <a-box color="white" position="0 0 -0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.5"></a-box>
       </a-entity>
     </a-scene>
 
@@ -90,10 +90,10 @@
       function spawnEnemy() {
         if(!targetFound || !isPlaying) return;
         const enemyEl = document.createElement('a-entity');
-        // יצירה בתוך טווח התיבה: X ו-Y בין 1- ל-1, Z בין 0 ל-2-
-        const x = (Math.random() - 0.5) * 2;
-        const y = (Math.random() - 0.5) * 2;
-        const z = -Math.random() * 2; 
+        // יצירה בתוך טווח התיבה החדש: X ו-Y בין 0.75- ל-0.75, Z בין 0 ל-1.5-
+        const x = (Math.random() - 0.5) * 1.5;
+        const y = (Math.random() - 0.5) * 1.5;
+        const z = -Math.random() * 1.5; 
         enemyEl.object3D.position.set(x, y, z);
         
         const boxEl = document.createElement('a-box');
