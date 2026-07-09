@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.0.9</div>
+    <div id="version-display">גרסה: 1.1.0</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -43,10 +43,11 @@
       <button id="start-btn">התחל משחק</button>
     </div>
 
-    <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false; uiLoading: #loading; uiScanning: #scanning;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
       
-      <a-entity mindar-image-target="targetIndex: 0" id="target-anchor">
+      <!-- הוספנו תכונות החלקה (smooth) לשיפור היציבות -->
+      <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
         <a-sphere id="target-sphere" color="blue" position="0 0 0" radius="0.05"></a-sphere>
       </a-entity>
@@ -79,12 +80,10 @@
         const camera = cameraEl.getObject3D('camera');
         const vector = new THREE.Vector3();
         
-        // עוברים על כל האויבים ובודקים מי מהם קרוב למרכז המסך (0,0)
         for (let i = enemies.length - 1; i >= 0; i--) {
           vector.setFromMatrixPosition(enemies[i].object3D.matrixWorld);
           vector.project(camera);
           
-          // רדיוס פגיעה 0.25 (סלחני מספיק לטלפון)
           if (Math.sqrt(vector.x * vector.x + vector.y * vector.y) < 0.25) {
             enemies[i].remove();
             enemies.splice(i, 1);
