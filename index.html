@@ -25,7 +25,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.2.0</div>
+    <div id="version-display">גרסה: 1.2.1</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -96,8 +96,9 @@
 
       // פונקציה לביצוע יריית הלייזר
       function shootLaser() {
-        // נקודת ההתחלה: מרכז המבנה (המשטח הירוק)
-        const startPoint = new THREE.Vector3(0.2, -0.2, 0);
+        // נקודת ההתחלה: האמצע של הקו העליון של המבנה (המשטח הירוק)
+        // המשטח נמצא במיקום y: -0.2 וגובה 0.5, ולכן החצי העליון שלו נמצא ב- y: 0.05 (-0.2 + 0.25)
+        const startPoint = new THREE.Vector3(0.2, 0.05, 0);
         
         // נקודת הסיום: מיקום המצלמה (הכוונת של השחקן)
         const cameraWorld = new THREE.Vector3();
@@ -107,9 +108,9 @@
         const endPoint = cameraWorld.clone();
         targetAnchor.object3D.worldToLocal(endPoint);
         
-        // יצירת קו הלייזר
+        // יצירת קו הלייזר האדום
         const laser = document.createElement('a-entity');
-        laser.setAttribute('line', `start: ${startPoint.x} ${startPoint.y} ${startPoint.z}; end: ${endPoint.x} ${endPoint.y} ${endPoint.z}; color: #ff0055; opacity: 1;`);
+        laser.setAttribute('line', `start: ${startPoint.x} ${startPoint.y} ${startPoint.z}; end: ${endPoint.x} ${endPoint.y} ${endPoint.z}; color: #ff0000; opacity: 1;`);
         
         targetAnchor.appendChild(laser);
         
