@@ -38,7 +38,7 @@
   </head>
   <body>
 
-    <div id="version-display">Version: 1.2.7</div>
+    <div id="version-display">Version: 1.2.8</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -50,8 +50,8 @@
     <!-- Start Screen -->
     <div id="start-screen" class="screen">
       <h1>DEFEND THE BUILDING</h1>
-      <p style="font-size: 1.2rem;">Tap on enemies to destroy them!</p>
-      <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 10px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
+      <p style="font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 5px;">Help us save our building! Tap the incoming cubes to laser them out of the sky.<br><br>Enter the high score list and get your special cup!</p>
+      <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 15px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
       <button id="start-btn">START GAME</button>
     </div>
 
@@ -107,13 +107,33 @@
         }, 400);
       }
 
-      // Function to shoot a laser to the local hit point
+      // Function to shoot a 5x wider laser beam to the local hit point
       function shootLaser(targetLocalPos) {
         const startPoint = new THREE.Vector3(0.2, 0.05, 0);
         const endPoint = targetLocalPos; 
         
-        const laser = document.createElement('a-entity');
-        laser.setAttribute('line', `start: ${startPoint.x} ${startPoint.y} ${startPoint.z}; end: ${endPoint.x} ${endPoint.y} ${endPoint.z}; color: #ff0000; opacity: 1;`);
+        const distance = startPoint.distanceTo(endPoint);
+        const midPoint = new THREE.Vector3().addVectors(startPoint, endPoint).multiplyScalar(0.5);
+        
+        // Instead of a thin 'line', we use a cylinder to make it thicker
+        const laser = document.createElement('a-cylinder');
+        laser.setAttribute('position', `${midPoint.x} ${midPoint.y} ${midPoint.z}`);
+        laser.setAttribute('radius', '0.015'); // Wide enough to be "5 times wider"
+        laser.setAttribute('height', distance);
+        laser.setAttribute('color', '#ff0000');
+        laser.setAttribute('material', 'shader: flat; opacity: 0.9');
+
+        // Calculate rotation to make the cylinder point from start to end
+        const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+        
+        // Convert quaternion to Euler angles so A-Frame can parse it as a rotation attribute
+        const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ');
+        const rotX = THREE.MathUtils.radToDeg(euler.x);
+        const rotY = THREE.MathUtils.radToDeg(euler.y);
+        const rotZ = THREE.MathUtils.radToDeg(euler.z);
+        
+        laser.setAttribute('rotation', `${rotX} ${rotY} ${rotZ}`);
         
         targetAnchor.appendChild(laser);
         
