@@ -38,7 +38,7 @@
   </head>
   <body>
 
-    <div id="version-display">Version: 1.2.8</div>
+    <div id="version-display">Version: 1.2.9</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -68,6 +68,12 @@
       
       <!-- Smoothed Anchor. All objects will sit inside to move with the image -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        
+        <!-- Neon scanner overlay scanning from top to bottom -->
+        <a-image src="neon.png" width="1" height="0.15" position="0 0.5 0.01" opacity="0.9" transparent="true"
+                 animation="property: position; from: 0 0.5 0.01; to: 0 -0.5 0.01; dur: 2000; easing: linear; loop: true">
+        </a-image>
+
         <!-- Yellow plane (Target on image) - hidden for now -->
         <!-- <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane> -->
         
