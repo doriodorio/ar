@@ -38,7 +38,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.2.4</div>
+    <div id="version-display">גרסה: 1.2.5</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -67,12 +67,14 @@
       
       <!-- Anchor מוחלק. כל האובייקטים יישבו בתוכו כדי לנוע יחד עם התמונה -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-        <!-- משטח צהוב (המטרה על התמונה) -->
-        <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
-        <!-- קוביית הגבולות הלבנה להיווצרות אויבים -->
-        <a-box color="white" position="0 0 0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
-        <!-- אזור המטרה הירוק -->
-        <a-plane id="target-area" color="#00ff00" position="0.2 -0.2 0" width="0.4" height="0.5" opacity="0.5"></a-plane>
+        <!-- משטח צהוב (המטרה על התמונה) - מוסתר כרגע -->
+        <!-- <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane> -->
+        
+        <!-- קוביית הגבולות הלבנה להיווצרות אויבים - מוסתרת כרגע -->
+        <!-- <a-box color="white" position="0 0 0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box> -->
+        
+        <!-- אזור המטרה הירוק - מוסתר כרגע כדי שלא ייראה במשחק -->
+        <!-- <a-plane id="target-area" color="#00ff00" position="0.2 -0.2 0" width="0.4" height="0.5" opacity="0.5"></a-plane> -->
       </a-entity>
     </a-scene>
 
@@ -141,13 +143,17 @@
         const targetZ = 0;
         const enemyTargetPos = new THREE.Vector3(targetX, targetY, targetZ);
         
+        /* // קו מסלול לתצוגה (מוסתר כעת)
         const pathLine = document.createElement('a-entity');
         pathLine.setAttribute('line', `start: ${startX} ${startY} ${startZ}; end: ${targetX} ${targetY} ${targetZ}; color: yellow; opacity: 0.6`);
-        
         targetAnchor.appendChild(pathLine);
+        */
+        
         targetAnchor.appendChild(enemy); 
         
-        enemies.push({ box: enemy, line: pathLine, targetPos: enemyTargetPos });
+        // שומרים רק את הקוביה ונקודת היעד שלה, ללא הקו (שנהפך להערה)
+        // אם נרצה להחזיר את הקו, נשנה את זה בחזרה ל: enemies.push({ box: enemy, line: pathLine, targetPos: enemyTargetPos });
+        enemies.push({ box: enemy, targetPos: enemyTargetPos });
       }
 
       // מערכת פגיעה מבוססת Projection לדו-ממד (בדיקת מרחק על המסך)
@@ -194,9 +200,9 @@
           // מפעילים פיצוץ
           createExplosion(hitPosition);
 
-          // מוחקים את הקוביה והמסלול שלה
+          // מוחקים את הקוביה (ואת המסלול אם קיים)
           enemyData.box.remove();
-          enemyData.line.remove();
+          if(enemyData.line) enemyData.line.remove(); // הגנה במקרה שהקו מוגדר כהערה
           enemies.splice(hitIndex, 1);
           
           // מעדכנים ניקוד
@@ -220,7 +226,7 @@
              createExplosion(enemyPos);
 
              enemyData.box.remove();
-             enemyData.line.remove();
+             if(enemyData.line) enemyData.line.remove();
              enemies.splice(i, 1);
              
              if(health <= 0) {
@@ -258,7 +264,7 @@
         
         enemies.forEach(e => {
           if (e.box.parentNode) e.box.remove();
-          if (e.line.parentNode) e.line.remove();
+          if (e.line && e.line.parentNode) e.line.remove();
         });
         enemies = [];
         
