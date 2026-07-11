@@ -31,10 +31,6 @@
       .stat-box { background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #0ff; font-weight: bold; font-size: 1.2rem;}
       #version-display { position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); padding: 5px; font-size: 0.8rem; z-index: 100; }
       
-      #crosshair { position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15; }
-      .crosshair-circle { width: 60px; height: 60px; border: 2px solid rgba(255, 255, 0, 0.8); border-radius: 50%; position: absolute; top: 20px; left: 20px; }
-      .crosshair-dot { width: 8px; height: 8px; background: red; border-radius: 50%; position: absolute; top: 46px; left: 46px; }
-
       .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto; }
       .hidden { display: none !important; }
       button { padding: 15px 40px; font-size: 1.5rem; background: #0ff; border: none; border-radius: 30px; cursor: pointer; margin-top: 15px; }
@@ -42,22 +38,19 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.2.2</div>
+    <div id="version-display">גרסה: 1.2.3</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
         <div class="stat-box">ניקוד: <span id="score-val">0</span></div>
         <div class="stat-box">חיים: <span id="health-val">100</span>%</div>
       </div>
-      <div id="crosshair">
-        <div class="crosshair-circle"></div>
-        <div class="crosshair-dot"></div>
-      </div>
     </div>
 
     <!-- מסך התחלה -->
     <div id="start-screen" class="screen">
       <h1>הגן על המבנה</h1>
+      <p style="font-size: 1.2rem;">גע באויבים כדי להשמיד אותם!</p>
       <button id="start-btn">התחל משחק</button>
     </div>
 
@@ -111,15 +104,10 @@
         }, 400);
       }
 
-      // פונקציה לביצוע יריית הלייזר
-      function shootLaser() {
+      // פונקציה לביצוע יריית הלייזר אל עבר נקודת הפגיעה המקומית (האויב)
+      function shootLaser(targetLocalPos) {
         const startPoint = new THREE.Vector3(0.2, 0.05, 0);
-        
-        const cameraWorld = new THREE.Vector3();
-        cameraEl.object3D.getWorldPosition(cameraWorld);
-        
-        const endPoint = cameraWorld.clone();
-        targetAnchor.object3D.worldToLocal(endPoint);
+        const endPoint = targetLocalPos; 
         
         const laser = document.createElement('a-entity');
         laser.setAttribute('line', `start: ${startPoint.x} ${startPoint.y} ${startPoint.z}; end: ${endPoint.x} ${endPoint.y} ${endPoint.z}; color: #ff0000; opacity: 1;`);
@@ -141,7 +129,6 @@
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
         // הקטנת הקוביות לגודל 0.06
         enemy.setAttribute('scale', '0.06 0.06 0.06');
-        // שימוש ברכיב המיוחד שיצרנו למעלה כדי לצייר רק קווי מתאר חיצוניים
         enemy.setAttribute('draw-edges', '');
 
         const startX = (Math.random() - 0.5) * 1.5;
@@ -163,27 +150,54 @@
         enemies.push({ box: enemy, line: pathLine, targetPos: enemyTargetPos });
       }
 
-      // מערכת כיוון ופגיעה (Screen-space targeting)
+      // מערכת פגיעה על ידי לחיצה ישירה (Raycasting ידני על המסך)
       window.addEventListener('click', (e) => {
         if(!isPlaying || e.target.tagName === 'BUTTON') return;
         
-        shootLaser();
-
         const camera = cameraEl.getObject3D('camera');
-        const vector = new THREE.Vector3();
+        const mouse = new THREE.Vector2();
         
-        for (let i = enemies.length - 1; i >= 0; i--) {
-          const enemyData = enemies[i];
-          vector.setFromMatrixPosition(enemyData.box.object3D.matrixWorld);
-          vector.project(camera);
+        // המרת מיקום הלחיצה (פיקסלים) למערכת צירים מנורמלת מ--1 עד 1
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        
+        // חיפוש פגיעה באחד האויבים
+        let hitIndex = -1;
+        let minDistance = Infinity;
+
+        for (let i = 0; i < enemies.length; i++) {
+          const enemy3D = enemies[i].box.object3D;
+          // בודקים אם קרן הלחיצה חותכת את המודל התלת-ממדי של הקוביה
+          const intersects = raycaster.intersectObject(enemy3D, true);
           
-          if (Math.sqrt(vector.x * vector.x + vector.y * vector.y) < 0.25) {
-            enemyData.box.remove();
-            enemyData.line.remove();
-            enemies.splice(i, 1);
-            score += 10;
-            document.getElementById('score-val').innerText = score;
+          if (intersects.length > 0 && intersects[0].distance < minDistance) {
+            minDistance = intersects[0].distance;
+            hitIndex = i;
           }
+        }
+
+        // אם פגענו באויב
+        if (hitIndex !== -1) {
+          const enemyData = enemies[hitIndex];
+          const hitPosition = enemyData.box.object3D.position.clone();
+          
+          // שולחים לייזר למקום הפגיעה
+          shootLaser(hitPosition);
+          
+          // מפעילים פיצוץ
+          createExplosion(hitPosition);
+
+          // מוחקים את הקוביה והמסלול שלה
+          enemyData.box.remove();
+          enemyData.line.remove();
+          enemies.splice(hitIndex, 1);
+          
+          // מעדכנים ניקוד
+          score += 10;
+          document.getElementById('score-val').innerText = score;
         }
       });
 
