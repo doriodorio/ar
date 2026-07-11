@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>הגנת AR על המבנה</title>
+    <title>AR Building Defense</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     
     <script>
-      // רכיב מיוחד שמצייר רק את קווי המתאר החיצוניים (ללא אלכסונים)
+      // Special component to draw only the outer edges (no diagonals)
       AFRAME.registerComponent('draw-edges', {
         init: function () {
           this.el.addEventListener('loaded', () => {
@@ -33,47 +33,48 @@
       
       .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto; }
       .hidden { display: none !important; }
-      button { padding: 15px 40px; font-size: 1.5rem; background: #0ff; border: none; border-radius: 30px; cursor: pointer; margin-top: 15px; }
+      button { padding: 15px 40px; font-size: 1.5rem; background: #0ff; border: none; border-radius: 30px; cursor: pointer; margin-top: 15px; font-weight: bold; }
     </style>
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.2.5</div>
+    <div id="version-display">Version: 1.2.6</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
-        <div class="stat-box">ניקוד: <span id="score-val">0</span></div>
-        <div class="stat-box">חיים: <span id="health-val">100</span>%</div>
+        <div class="stat-box">Score: <span id="score-val">0</span></div>
+        <div class="stat-box">Health: <span id="health-val">100</span>%</div>
       </div>
     </div>
 
-    <!-- מסך התחלה -->
+    <!-- Start Screen -->
     <div id="start-screen" class="screen">
-      <h1>הגן על המבנה</h1>
-      <p style="font-size: 1.2rem;">גע באויבים כדי להשמיד אותם!</p>
-      <button id="start-btn">התחל משחק</button>
+      <h1>DEFEND THE BUILDING</h1>
+      <p style="font-size: 1.2rem;">Tap on enemies to destroy them!</p>
+      <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 10px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
+      <button id="start-btn">START GAME</button>
     </div>
 
-    <!-- מסך סיום משחק -->
+    <!-- Game Over Screen -->
     <div id="game-over-screen" class="screen hidden">
-      <h1 style="color: #ff4444;">המשחק נגמר</h1>
-      <p style="font-size: 1.5rem;">ניקוד סופי: <strong id="final-score" style="color: #0ff;">0</strong></p>
-      <p style="font-size: 1.2rem; margin-top: 10px;">נסה שוב</p>
-      <button id="restart-btn">התחל מחדש</button>
+      <h1 style="color: #ff4444;">GAME OVER</h1>
+      <p style="font-size: 1.5rem;">Final Score: <strong id="final-score" style="color: #0ff;">0</strong></p>
+      <p style="font-size: 1.2rem; margin-top: 10px;">Try again</p>
+      <button id="restart-btn">RESTART</button>
     </div>
 
     <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
       
-      <!-- Anchor מוחלק. כל האובייקטים יישבו בתוכו כדי לנוע יחד עם התמונה -->
+      <!-- Smoothed Anchor. All objects will sit inside to move with the image -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-        <!-- משטח צהוב (המטרה על התמונה) - מוסתר כרגע -->
+        <!-- Yellow plane (Target on image) - hidden for now -->
         <!-- <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane> -->
         
-        <!-- קוביית הגבולות הלבנה להיווצרות אויבים - מוסתרת כרגע -->
+        <!-- White boundary box for spawning - hidden for now -->
         <!-- <a-box color="white" position="0 0 0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box> -->
         
-        <!-- אזור המטרה הירוק - מוסתר כרגע כדי שלא ייראה במשחק -->
+        <!-- Green target area - hidden for now so it won't show in-game -->
         <!-- <a-plane id="target-area" color="#00ff00" position="0.2 -0.2 0" width="0.4" height="0.5" opacity="0.5"></a-plane> -->
       </a-entity>
     </a-scene>
@@ -86,7 +87,7 @@
       const cameraEl = document.querySelector('#camera');
       const targetAnchor = document.querySelector('#target-anchor');
 
-      // פונקציה ליצירת אפקט פיצוץ
+      // Function to create an explosion effect
       function createExplosion(pos) {
         const explosion = document.createElement('a-sphere');
         explosion.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
@@ -106,7 +107,7 @@
         }, 400);
       }
 
-      // פונקציה לביצוע יריית הלייזר אל עבר נקודת הפגיעה המקומית (האויב)
+      // Function to shoot a laser to the local hit point (enemy)
       function shootLaser(targetLocalPos) {
         const startPoint = new THREE.Vector3(0.2, 0.05, 0);
         const endPoint = targetLocalPos; 
@@ -129,7 +130,7 @@
         const enemy = document.createElement('a-box');
         const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#aa44ff'];
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
-        // הקטנת הקוביות לגודל 0.06
+        // Reduce cube size to 0.06
         enemy.setAttribute('scale', '0.06 0.06 0.06');
         enemy.setAttribute('draw-edges', '');
 
@@ -143,7 +144,7 @@
         const targetZ = 0;
         const enemyTargetPos = new THREE.Vector3(targetX, targetY, targetZ);
         
-        /* // קו מסלול לתצוגה (מוסתר כעת)
+        /* // Path line for display (hidden currently)
         const pathLine = document.createElement('a-entity');
         pathLine.setAttribute('line', `start: ${startX} ${startY} ${startZ}; end: ${targetX} ${targetY} ${targetZ}; color: yellow; opacity: 0.6`);
         targetAnchor.appendChild(pathLine);
@@ -151,18 +152,18 @@
         
         targetAnchor.appendChild(enemy); 
         
-        // שומרים רק את הקוביה ונקודת היעד שלה, ללא הקו (שנהפך להערה)
-        // אם נרצה להחזיר את הקו, נשנה את זה בחזרה ל: enemies.push({ box: enemy, line: pathLine, targetPos: enemyTargetPos });
+        // Save only the box and its target pos, without the line (which is commented out)
+        // If we want to restore the line, change back to: enemies.push({ box: enemy, line: pathLine, targetPos: enemyTargetPos });
         enemies.push({ box: enemy, targetPos: enemyTargetPos });
       }
 
-      // מערכת פגיעה מבוססת Projection לדו-ממד (בדיקת מרחק על המסך)
+      // 2D Projection based hit system (Screen distance check)
       window.addEventListener('click', (e) => {
         if(!isPlaying || e.target.tagName === 'BUTTON') return;
         
         const camera = cameraEl.getObject3D('camera');
         
-        // המרת מיקום הלחיצה (פיקסלים) למערכת צירים מנורמלת מ-1- עד 1
+        // Convert click position (pixels) to normalized coordinate system from -1 to 1
         const clickX = (e.clientX / window.innerWidth) * 2 - 1;
         const clickY = -(e.clientY / window.innerHeight) * 2 + 1;
         
@@ -173,45 +174,45 @@
         for (let i = 0; i < enemies.length; i++) {
           const enemyData = enemies[i];
           
-          // המרת המיקום התלת-ממדי של האויב למיקום דו-ממדי על המסך
+          // Convert 3D position of the enemy to 2D screen position
           vector.setFromMatrixPosition(enemyData.box.object3D.matrixWorld);
           vector.project(camera);
           
-          // חישוב המרחק הדו-ממדי בין נקודת הלחיצה לאויב
+          // Calculate the 2D distance between click and enemy
           const dx = vector.x - clickX;
           const dy = vector.y - clickY;
           const distance = Math.sqrt(dx * dx + dy * dy);
           
-          // בדיקה אם המרחק קטן מספיק כדי להיחשב פגיעה (0.15 זה רדיוס פגיעה נוח באצבע)
+          // Check if distance is small enough to be considered a hit (0.15 is a forgiving radius)
           if (distance < 0.15 && distance < minDistance) {
             minDistance = distance;
             hitIndex = i;
           }
         }
 
-        // אם פגענו באויב
+        // If we hit an enemy
         if (hitIndex !== -1) {
           const enemyData = enemies[hitIndex];
           const hitPosition = enemyData.box.object3D.position.clone();
           
-          // שולחים לייזר למקום הפגיעה
+          // Shoot a laser to the hit position
           shootLaser(hitPosition);
           
-          // מפעילים פיצוץ
+          // Trigger explosion
           createExplosion(hitPosition);
 
-          // מוחקים את הקוביה (ואת המסלול אם קיים)
+          // Remove the box (and the line if it exists)
           enemyData.box.remove();
-          if(enemyData.line) enemyData.line.remove(); // הגנה במקרה שהקו מוגדר כהערה
+          if(enemyData.line) enemyData.line.remove(); // Safety check if line is commented out
           enemies.splice(hitIndex, 1);
           
-          // מעדכנים ניקוד
+          // Update score
           score += 10;
           document.getElementById('score-val').innerText = score;
         }
       });
 
-      // לולאת משחק מרכזית
+      // Main game loop
       function gameLoop() {
         if (!isPlaying) return;
         
