@@ -38,7 +38,7 @@
   </head>
   <body>
 
-    <div id="version-display">Version: 1.2.6</div>
+    <div id="version-display">Version: 1.2.7</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -107,7 +107,7 @@
         }, 400);
       }
 
-      // Function to shoot a laser to the local hit point (enemy)
+      // Function to shoot a laser to the local hit point
       function shootLaser(targetLocalPos) {
         const startPoint = new THREE.Vector3(0.2, 0.05, 0);
         const endPoint = targetLocalPos; 
@@ -195,7 +195,7 @@
           const enemyData = enemies[hitIndex];
           const hitPosition = enemyData.box.object3D.position.clone();
           
-          // Shoot a laser to the hit position
+          // Shoot a laser exactly to the hit position
           shootLaser(hitPosition);
           
           // Trigger explosion
@@ -209,6 +209,22 @@
           // Update score
           score += 10;
           document.getElementById('score-val').innerText = score;
+        } else {
+          // MISSED SHOT: Calculate the 3D point in space where the user tapped
+          const clickPoint = new THREE.Vector3(clickX, clickY, 0.5);
+          clickPoint.unproject(camera);
+          
+          // Get the direction from the camera to the unprojected point
+          const dir = clickPoint.sub(camera.position).normalize();
+          
+          // Create a target point deep into the scene (e.g. 2 units away from camera)
+          const targetWorld = camera.position.clone().add(dir.multiplyScalar(2));
+          
+          // Convert that world point into the target anchor's local space
+          const targetLocal = targetAnchor.object3D.worldToLocal(targetWorld);
+          
+          // Shoot the laser towards that calculated empty space
+          shootLaser(targetLocal);
         }
       });
 
