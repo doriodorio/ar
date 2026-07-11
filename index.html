@@ -67,14 +67,23 @@
       .stat-box { background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #0ff; font-weight: bold; font-size: 1.2rem;}
       #version-display { position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); padding: 5px; font-size: 0.8rem; z-index: 100; }
       
-      .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto; }
+      .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; color: white; text-align: center; pointer-events: auto; overflow-y: auto; padding: 20px 0;}
       .hidden { display: none !important; }
       button { padding: 15px 40px; font-size: 1.5rem; background: #0ff; border: none; border-radius: 30px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+      
+      /* Leaderboard and form styles */
+      #hs-form-section { background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 2px solid #ffeb3b; margin: 20px 0; width: 90%; max-width: 400px; box-sizing: border-box; }
+      .hs-input { padding: 10px; width: 90%; margin-bottom: 15px; border-radius: 5px; border: none; font-size: 1rem; box-sizing: border-box;}
+      #hs-leaderboard-section { width: 90%; max-width: 400px; margin-top: 20px; margin-bottom: 30px;}
+      #hs-list { list-style: none; padding: 0; margin: 0; text-align: left; max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; border: 1px solid #0ff; }
+      
+      /* Flex centering helpers */
+      .center-flex { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; width: 100%;}
     </style>
   </head>
   <body>
 
-    <div id="version-display">Version: 1.3.1</div>
+    <div id="version-display">Version: 1.4.1</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -85,18 +94,40 @@
 
     <!-- Start Screen -->
     <div id="start-screen" class="screen">
-      <h1>DEFEND THE BUILDING</h1>
-      <p style="font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 5px;">Help us save our building! Tap the incoming cubes to laser them out of the sky.<br><br>Enter the high score list and get your special cup!</p>
-      <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 15px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
-      <button id="start-btn">START GAME</button>
+      <div class="center-flex">
+        <h1>DEFEND THE BUILDING</h1>
+        <p style="font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 5px;">Help us save our building! Tap the incoming cubes to laser them out of the sky.<br><br>Enter the high score list and get your special cup!</p>
+        <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 15px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
+        <button id="start-btn">START GAME</button>
+      </div>
     </div>
 
     <!-- Game Over Screen -->
     <div id="game-over-screen" class="screen hidden">
-      <h1 style="color: #ff4444;">GAME OVER</h1>
-      <p style="font-size: 1.5rem;">Final Score: <strong id="final-score" style="color: #0ff;">0</strong></p>
-      <p style="font-size: 1.2rem; margin-top: 10px;">Try again</p>
-      <button id="restart-btn">RESTART</button>
+      <h1 style="color: #ff4444; margin-top: 40px; margin-bottom: 10px;">GAME OVER</h1>
+      <p style="font-size: 1.5rem; margin: 0;">Final Score: <strong id="final-score" style="color: #0ff;">0</strong></p>
+
+      <!-- Form for Top 50 -->
+      <div id="hs-form-section" class="hidden">
+          <h2 style="color: #ffeb3b; margin-top:0;">Top 50 High Score!</h2>
+          <p style="font-size: 1rem; margin-bottom: 15px;">Enter your details to claim your spot (Your email will not be shown).</p>
+          <input type="text" id="hs-name" class="hs-input" placeholder="Your Name" required />
+          <input type="email" id="hs-email" class="hs-input" placeholder="Your Email" required />
+          <button id="hs-submit-btn" style="padding: 10px 20px; font-size: 1.2rem; width: 90%;">SUBMIT SCORE</button>
+      </div>
+
+      <!-- Success Message -->
+      <h2 id="hs-success-msg" class="hidden" style="color: #00ffcc; margin: 20px 0; padding: 0 10px;"></h2>
+
+      <!-- Leaderboard -->
+      <div id="hs-leaderboard-section" class="hidden">
+          <h3 style="border-bottom: 2px solid #0ff; padding-bottom: 5px; margin-bottom: 10px; color: white;">GLOBAL TOP 50</h3>
+          <ul id="hs-list">
+              <!-- Score items injected via JS -->
+          </ul>
+      </div>
+
+      <button id="restart-btn" class="hidden" style="margin-bottom: 40px;">TRY AGAIN</button>
     </div>
 
     <a-scene id="scene" mindar-image="imageTargetSrc: new_targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
@@ -115,19 +146,151 @@
                  material="shader: scanner; src: #neon-tex; transparent: true; scanHeight: 0.15;"
                  animation="property: material.scanY; from: 1.1; to: -0.2; dur: 2000; easing: linear; loop: true">
         </a-plane>
-
-        <!-- Yellow plane (Target on image) - hidden for now -->
-        <!-- <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane> -->
-        
-        <!-- White boundary box for spawning - hidden for now -->
-        <!-- <a-box color="white" position="0 0 0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box> -->
-        
-        <!-- Green target area - hidden for now so it won't show in-game -->
-        <!-- <a-plane id="target-area" color="#00ff00" position="0.2 -0.2 0" width="0.4" height="0.5" opacity="0.5"></a-plane> -->
       </a-entity>
     </a-scene>
 
-    <script>
+    <!-- App Logic & Firebase Integration -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+      // --- Firebase Setup & High Score Logic ---
+      let db, auth, currentUser;
+      let highScoresList = [];
+      let isSubmitting = false;
+
+      const initFirebase = async () => {
+          try {
+              // Your provided Firebase configuration
+              const firebaseConfig = {
+                apiKey: "AIzaSyC03JbZCSDeMczPODBeuXnngxOON7B6dZY",
+                authDomain: "argameis.firebaseapp.com",
+                projectId: "argameis",
+                storageBucket: "argameis.firebasestorage.app",
+                messagingSenderId: "751270627267",
+                appId: "1:751270627267:web:d2910112e2cd3b8cb05f76",
+                measurementId: "G-R3QR8JETW8"
+              };
+
+              const app = initializeApp(firebaseConfig);
+              auth = getAuth(app);
+              db = getFirestore(app);
+
+              // Authenticate users anonymously automatically
+              await signInAnonymously(auth);
+
+              // Listen to auth state and fetch scores
+              onAuthStateChanged(auth, (user) => {
+                  currentUser = user;
+                  if (user) {
+                      // Save scores to a collection named 'highscores' in your database
+                      const scoresRef = collection(db, 'highscores');
+                      onSnapshot(scoresRef, (snapshot) => {
+                          const scores = [];
+                          snapshot.forEach(doc => scores.push({id: doc.id, ...doc.data()}));
+                          // Sort descending manually
+                          scores.sort((a, b) => b.score - a.score);
+                          highScoresList = scores;
+                          
+                          // Dynamically update leaderboard if it's currently visible
+                          if (!document.getElementById('hs-leaderboard-section').classList.contains('hidden')) {
+                              renderLeaderboard();
+                          }
+                      }, (error) => {
+                          console.error("Error listening to high scores", error);
+                      });
+                  }
+              });
+          } catch(e) {
+              console.error("Firebase init error", e);
+          }
+      };
+
+      initFirebase();
+
+      function renderLeaderboard() {
+          const listEl = document.getElementById('hs-list');
+          listEl.innerHTML = '';
+          const top50 = highScoresList.slice(0, 50);
+          
+          if (top50.length === 0) {
+              listEl.innerHTML = '<li style="text-align: center; color: #aaa; padding: 10px;">No high scores yet! Be the first!</li>';
+              return;
+          }
+
+          top50.forEach((entry, index) => {
+              const li = document.createElement('li');
+              li.style.padding = "8px 10px";
+              li.style.borderBottom = "1px solid #333";
+              li.style.display = "flex";
+              li.style.justifyContent = "space-between";
+              li.style.color = "white";
+              
+              // Colors for podium
+              if(index === 0) li.style.color = "#ffeb3b"; // Gold
+              else if(index === 1) li.style.color = "#ccc"; // Silver
+              else if(index === 2) li.style.color = "#cd7f32"; // Bronze
+
+              const rankName = document.createElement('span');
+              rankName.innerText = `${index + 1}. ${entry.name || 'Anonymous'}`;
+              
+              const scoreSpan = document.createElement('span');
+              scoreSpan.innerText = entry.score;
+              scoreSpan.style.color = (index > 2) ? "#0ff" : li.style.color;
+              scoreSpan.style.fontWeight = "bold";
+
+              li.appendChild(rankName);
+              li.appendChild(scoreSpan);
+              listEl.appendChild(li);
+          });
+      }
+
+      document.getElementById('hs-submit-btn').addEventListener('click', async () => {
+          const nameInput = document.getElementById('hs-name').value.trim();
+          const emailInput = document.getElementById('hs-email').value.trim();
+
+          if (!nameInput || !emailInput) {
+              alert("Please enter both your name and email.");
+              return;
+          }
+
+          if (isSubmitting) return;
+          isSubmitting = true;
+          document.getElementById('hs-submit-btn').innerText = "SAVING...";
+
+          try {
+              if (currentUser && db) {
+                  const scoresRef = collection(db, 'highscores');
+                  await addDoc(scoresRef, { 
+                      name: nameInput, 
+                      email: emailInput, 
+                      score: score, 
+                      timestamp: Date.now() 
+                  });
+              }
+
+              // Hide form, show success message
+              document.getElementById('hs-form-section').classList.add('hidden');
+              const msgEl = document.getElementById('hs-success-msg');
+              msgEl.innerText = `${nameInput} get your winning cup!`;
+              msgEl.classList.remove('hidden');
+
+              // Show leaderboard and restart button
+              renderLeaderboard();
+              document.getElementById('hs-leaderboard-section').classList.remove('hidden');
+              document.getElementById('restart-btn').classList.remove('hidden');
+
+          } catch (e) {
+              console.error("Failed to submit score", e);
+              alert("Failed to save score. Please try again.");
+          } finally {
+              isSubmitting = false;
+              document.getElementById('hs-submit-btn').innerText = "SUBMIT SCORE";
+          }
+      });
+
+      // --- Game Logic ---
       let isPlaying = false, score = 0, health = 100, enemies = [];
       let spawnIntervalId = null;
       
@@ -135,7 +298,6 @@
       const cameraEl = document.querySelector('#camera');
       const targetAnchor = document.querySelector('#target-anchor');
 
-      // Function to create an explosion effect
       function createExplosion(pos) {
         const explosion = document.createElement('a-sphere');
         explosion.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
@@ -155,7 +317,6 @@
         }, 400);
       }
 
-      // Function to shoot a 5x wider laser beam to the local hit point
       function shootLaser(targetLocalPos) {
         const startPoint = new THREE.Vector3(0.2, 0.05, 0);
         const endPoint = targetLocalPos; 
@@ -163,19 +324,16 @@
         const distance = startPoint.distanceTo(endPoint);
         const midPoint = new THREE.Vector3().addVectors(startPoint, endPoint).multiplyScalar(0.5);
         
-        // Instead of a thin 'line', we use a cylinder to make it thicker
         const laser = document.createElement('a-cylinder');
         laser.setAttribute('position', `${midPoint.x} ${midPoint.y} ${midPoint.z}`);
-        laser.setAttribute('radius', '0.015'); // Wide enough to be "5 times wider"
+        laser.setAttribute('radius', '0.015'); 
         laser.setAttribute('height', distance);
         laser.setAttribute('color', '#ff0000');
         laser.setAttribute('material', 'shader: flat; opacity: 0.9');
 
-        // Calculate rotation to make the cylinder point from start to end
         const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
         const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
         
-        // Convert quaternion to Euler angles so A-Frame can parse it as a rotation attribute
         const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ');
         const rotX = THREE.MathUtils.radToDeg(euler.x);
         const rotY = THREE.MathUtils.radToDeg(euler.y);
@@ -198,7 +356,6 @@
         const enemy = document.createElement('a-box');
         const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#aa44ff'];
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
-        // Reduce cube size to 0.06
         enemy.setAttribute('scale', '0.06 0.06 0.06');
         enemy.setAttribute('draw-edges', '');
 
@@ -213,18 +370,14 @@
         const enemyTargetPos = new THREE.Vector3(targetX, targetY, targetZ);
         
         targetAnchor.appendChild(enemy); 
-        
-        // Save only the box and its target pos, without the line (which is commented out)
         enemies.push({ box: enemy, targetPos: enemyTargetPos });
       }
 
-      // 2D Projection based hit system (Screen distance check)
       window.addEventListener('click', (e) => {
-        if(!isPlaying || e.target.tagName === 'BUTTON') return;
+        if(!isPlaying || e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
         
         const camera = cameraEl.getObject3D('camera');
         
-        // Convert click position (pixels) to normalized coordinate system from -1 to 1
         const clickX = (e.clientX / window.innerWidth) * 2 - 1;
         const clickY = -(e.clientY / window.innerHeight) * 2 + 1;
         
@@ -235,61 +388,76 @@
         for (let i = 0; i < enemies.length; i++) {
           const enemyData = enemies[i];
           
-          // Convert 3D position of the enemy to 2D screen position
           vector.setFromMatrixPosition(enemyData.box.object3D.matrixWorld);
           vector.project(camera);
           
-          // Calculate the 2D distance between click and enemy
           const dx = vector.x - clickX;
           const dy = vector.y - clickY;
           const distance = Math.sqrt(dx * dx + dy * dy);
           
-          // Check if distance is small enough to be considered a hit (0.15 is a forgiving radius)
           if (distance < 0.15 && distance < minDistance) {
             minDistance = distance;
             hitIndex = i;
           }
         }
 
-        // If we hit an enemy
         if (hitIndex !== -1) {
           const enemyData = enemies[hitIndex];
           const hitPosition = enemyData.box.object3D.position.clone();
           
-          // Shoot a laser exactly to the hit position
           shootLaser(hitPosition);
-          
-          // Trigger explosion
           createExplosion(hitPosition);
 
-          // Remove the box (and the line if it exists)
           enemyData.box.remove();
-          if(enemyData.line) enemyData.line.remove(); // Safety check if line is commented out
+          if(enemyData.line) enemyData.line.remove(); 
           enemies.splice(hitIndex, 1);
           
-          // Update score
           score += 10;
           document.getElementById('score-val').innerText = score;
         } else {
-          // MISSED SHOT: Calculate the 3D point in space where the user tapped
           const clickPoint = new THREE.Vector3(clickX, clickY, 0.5);
           clickPoint.unproject(camera);
           
-          // Get the direction from the camera to the unprojected point
           const dir = clickPoint.sub(camera.position).normalize();
-          
-          // Create a target point deep into the scene (e.g. 2 units away from camera)
           const targetWorld = camera.position.clone().add(dir.multiplyScalar(2));
-          
-          // Convert that world point into the target anchor's local space
           const targetLocal = targetAnchor.object3D.worldToLocal(targetWorld);
           
-          // Shoot the laser towards that calculated empty space
           shootLaser(targetLocal);
         }
       });
 
-      // Main game loop
+      function triggerGameOver() {
+        isPlaying = false;
+        clearInterval(spawnIntervalId);
+        
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('ui-container').classList.add('hidden');
+        
+        const gameOverScreen = document.getElementById('game-over-screen');
+        gameOverScreen.classList.remove('hidden');
+
+        // Reset visibility of end screen components
+        document.getElementById('hs-form-section').classList.add('hidden');
+        document.getElementById('hs-success-msg').classList.add('hidden');
+        document.getElementById('hs-leaderboard-section').classList.add('hidden');
+        document.getElementById('restart-btn').classList.add('hidden');
+
+        // Check if user is in Top 50
+        const isTop50 = highScoresList.length < 50 || score > (highScoresList[49]?.score || 0);
+
+        if (isTop50 && score > 0) {
+            // Prompt user for info
+            document.getElementById('hs-name').value = '';
+            document.getElementById('hs-email').value = '';
+            document.getElementById('hs-form-section').classList.remove('hidden');
+        } else {
+            // Did not make high scores, just show board & retry
+            renderLeaderboard();
+            document.getElementById('hs-leaderboard-section').classList.remove('hidden');
+            document.getElementById('restart-btn').classList.remove('hidden');
+        }
+      }
+
       function gameLoop() {
         if (!isPlaying) return;
         
@@ -308,12 +476,7 @@
              enemies.splice(i, 1);
              
              if(health <= 0) {
-               isPlaying = false;
-               clearInterval(spawnIntervalId);
-               
-               document.getElementById('final-score').innerText = score;
-               document.getElementById('ui-container').classList.add('hidden');
-               document.getElementById('game-over-screen').classList.remove('hidden');
+                 triggerGameOver();
              }
              continue;
           }
