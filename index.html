@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>AR Building Defense</title>
+    <title>AR Building Defense - Juice Edition</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     
@@ -64,38 +64,92 @@
       body { margin: 0; overflow: hidden; font-family: sans-serif; background: #000; }
       #ui-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
       #stats-bar { display: flex; justify-content: space-between; padding: 20px; color: white; text-shadow: 2px 2px 4px black; }
-      .stat-box { background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #0ff; font-weight: bold; font-size: 1.2rem;}
+      .stat-box { background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #0ff; font-weight: bold; font-size: 1.2rem; transition: transform 0.1s ease-out, background 0.1s; }
       #version-display { position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); padding: 5px; font-size: 0.8rem; z-index: 100; }
       
       .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 20; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; color: white; text-align: center; pointer-events: auto; overflow-y: auto; padding: 20px 0;}
       .hidden { display: none !important; }
-      button { padding: 15px 40px; font-size: 1.5rem; background: #0ff; border: none; border-radius: 30px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+      
+      /* Juicy Start Button */
+      button { 
+          padding: 15px 40px; font-size: 1.5rem; background: #0ff; color: #000; border: none; border-radius: 30px; 
+          cursor: pointer; margin-top: 15px; font-weight: bold; text-transform: uppercase;
+          transition: transform 0.1s ease;
+      }
+      button:active { transform: scale(0.9); }
+      #start-btn { animation: pulseBtn 1.5s infinite; }
       
       /* Leaderboard and form styles */
       #hs-form-section { background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 2px solid #ffeb3b; margin: 20px 0; width: 90%; max-width: 400px; box-sizing: border-box; }
-      .hs-input { padding: 10px; width: 90%; margin-bottom: 15px; border-radius: 5px; border: none; font-size: 1rem; box-sizing: border-box;}
+      .hs-input { padding: 10px; width: 90%; margin-bottom: 15px; border-radius: 5px; border: none; font-size: 1rem; box-sizing: border-box; font-family: inherit;}
       #hs-leaderboard-section { width: 90%; max-width: 400px; margin-top: 20px; margin-bottom: 30px;}
       #hs-list { list-style: none; padding: 0; margin: 0; text-align: left; max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; border: 1px solid #0ff; }
       
       /* Flex centering helpers */
       .center-flex { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; width: 100%;}
+      
+      /* JUICE EFFECTS */
+      /* Floating Combat Text */
+      .floating-text {
+          position: absolute;
+          color: #0ff;
+          font-size: 2.5rem;
+          font-weight: bold;
+          font-style: italic;
+          pointer-events: none;
+          z-index: 100;
+          text-shadow: 0 0 10px #0ff, 0 0 20px #00aaff;
+          transform: translate(-50%, -50%);
+          animation: floatUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      }
+      @keyframes floatUp {
+          0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+          50% { transform: translate(-50%, -100px) scale(1.2); opacity: 1; }
+          100% { transform: translate(-50%, -150px) scale(1); opacity: 0; }
+      }
+      
+      /* Pulse Animation */
+      @keyframes pulseBtn {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7); }
+          70% { transform: scale(1.1); box-shadow: 0 0 20px 15px rgba(0, 255, 255, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
+      }
+
+      /* Damage Overlay & Shake */
+      #damage-overlay {
+          position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(255, 0, 0, 0.4); z-index: 15; pointer-events: none;
+          opacity: 0; transition: opacity 0.1s;
+      }
+      .screen-shake {
+          animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+      }
+      @keyframes shake {
+          10%, 90% { transform: translate3d(-4px, 0, 0) rotate(-1deg); }
+          20%, 80% { transform: translate3d(6px, 0, 0) rotate(1deg); }
+          30%, 50%, 70% { transform: translate3d(-10px, 0, 0) rotate(-2deg); }
+          40%, 60% { transform: translate3d(10px, 0, 0) rotate(2deg); }
+      }
     </style>
   </head>
   <body>
 
-    <div id="version-display">Version: 1.4.2</div>
+    <!-- Juice Features Overlay -->
+    <div id="damage-overlay"></div>
+
+    <div id="version-display">Version: 1.5.0 (Juice Edition)</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
-        <div class="stat-box">Score: <span id="score-val">0</span></div>
-        <div class="stat-box">Health: <span id="health-val">100</span>%</div>
+        <div class="stat-box" id="score-box">Score: <span id="score-val">0</span></div>
+        <div class="stat-box" id="health-box">Health: <span id="health-val">100</span>%</div>
       </div>
     </div>
 
     <!-- Start Screen -->
     <div id="start-screen" class="screen">
       <div class="center-flex">
-        <h1>DEFEND THE BUILDING</h1>
+        <h1 style="text-shadow: 0 0 20px #ffeb3b;">DEFEND THE BUILDING</h1>
         <p style="font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 5px;">Help us save our building! Tap the incoming asteroids to laser them out of the sky.<br><br>Enter the high score list and get your special cup!</p>
         <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 15px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
         <button id="start-btn">START GAME</button>
@@ -104,7 +158,7 @@
 
     <!-- Game Over Screen -->
     <div id="game-over-screen" class="screen hidden">
-      <h1 style="color: #ff4444; margin-top: 40px; margin-bottom: 10px;">GAME OVER</h1>
+      <h1 style="color: #ff4444; margin-top: 40px; margin-bottom: 10px; text-shadow: 0 0 20px #ff0000;">GAME OVER</h1>
       <p style="font-size: 1.5rem; margin: 0;">Final Score: <strong id="final-score" style="color: #0ff;">0</strong></p>
 
       <!-- Form for Top 50 -->
@@ -141,7 +195,6 @@
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         
         <!-- Static neon image with the animated scanning mask shader -->
-        <!-- Adjusted height to 1.25 for a 1:1.25 aspect ratio -->
         <a-plane width="1" height="1.25" position="0 0 0.01" 
                  material="shader: scanner; src: #neon-tex; transparent: true; scanHeight: 0.15;"
                  animation="property: material.scanY; from: 1.1; to: -0.2; dur: 2000; easing: linear; loop: true">
@@ -155,6 +208,57 @@
       import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
       import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+      // --- PROCEDURAL AUDIO (JUICE) ---
+      let audioCtx = null;
+      
+      function initAudio() {
+          if (!audioCtx) {
+              audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (audioCtx.state === 'suspended') {
+              audioCtx.resume();
+          }
+      }
+
+      function playSfx(type) {
+          if (!audioCtx) return;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          const now = audioCtx.currentTime;
+
+          if (type === 'shoot') {
+              // High-pitched classic laser pew
+              osc.type = 'square';
+              osc.frequency.setValueAtTime(800, now);
+              osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+              gain.gain.setValueAtTime(0.1, now);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+              osc.start(now);
+              osc.stop(now + 0.15);
+          } else if (type === 'explosion') {
+              // Low rumbling noise substitute
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(100, now);
+              osc.frequency.exponentialRampToValueAtTime(10, now + 0.4);
+              gain.gain.setValueAtTime(0.3, now);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+              osc.start(now);
+              osc.stop(now + 0.4);
+          } else if (type === 'damage') {
+              // Harsh klaxon alarm
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(60, now);
+              osc.frequency.linearRampToValueAtTime(40, now + 0.5);
+              gain.gain.setValueAtTime(0.5, now);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+              osc.start(now);
+              osc.stop(now + 0.5);
+          }
+      }
+
       // --- Firebase Setup & High Score Logic ---
       let db, auth, currentUser;
       let highScoresList = [];
@@ -162,7 +266,6 @@
 
       const initFirebase = async () => {
           try {
-              // Your provided Firebase configuration
               const firebaseConfig = {
                 apiKey: "AIzaSyC03JbZCSDeMczPODBeuXnngxOON7B6dZY",
                 authDomain: "argameis.firebaseapp.com",
@@ -177,23 +280,18 @@
               auth = getAuth(app);
               db = getFirestore(app);
 
-              // Authenticate users anonymously automatically
               await signInAnonymously(auth);
 
-              // Listen to auth state and fetch scores
               onAuthStateChanged(auth, (user) => {
                   currentUser = user;
                   if (user) {
-                      // Save scores to a collection named 'highscores' in your database
                       const scoresRef = collection(db, 'highscores');
                       onSnapshot(scoresRef, (snapshot) => {
                           const scores = [];
                           snapshot.forEach(doc => scores.push({id: doc.id, ...doc.data()}));
-                          // Sort descending manually
                           scores.sort((a, b) => b.score - a.score);
                           highScoresList = scores;
                           
-                          // Dynamically update leaderboard if it's currently visible
                           if (!document.getElementById('hs-leaderboard-section').classList.contains('hidden')) {
                               renderLeaderboard();
                           }
@@ -227,10 +325,9 @@
               li.style.justifyContent = "space-between";
               li.style.color = "white";
               
-              // Colors for podium
-              if(index === 0) li.style.color = "#ffeb3b"; // Gold
-              else if(index === 1) li.style.color = "#ccc"; // Silver
-              else if(index === 2) li.style.color = "#cd7f32"; // Bronze
+              if(index === 0) li.style.color = "#ffeb3b"; 
+              else if(index === 1) li.style.color = "#ccc"; 
+              else if(index === 2) li.style.color = "#cd7f32"; 
 
               const rankName = document.createElement('span');
               rankName.innerText = `${index + 1}. ${entry.name || 'Anonymous'}`;
@@ -270,13 +367,11 @@
                   });
               }
 
-              // Hide form, show success message
               document.getElementById('hs-form-section').classList.add('hidden');
               const msgEl = document.getElementById('hs-success-msg');
               msgEl.innerText = `${nameInput} get your winning cup!`;
               msgEl.classList.remove('hidden');
 
-              // Show leaderboard and restart button
               renderLeaderboard();
               document.getElementById('hs-leaderboard-section').classList.remove('hidden');
               document.getElementById('restart-btn').classList.remove('hidden');
@@ -290,7 +385,7 @@
           }
       });
 
-      // --- Game Logic ---
+      // --- Game Logic & JUICE Visuals ---
       let isPlaying = false, score = 0, health = 100, enemies = [];
       let spawnIntervalId = null;
       
@@ -298,38 +393,91 @@
       const cameraEl = document.querySelector('#camera');
       const targetAnchor = document.querySelector('#target-anchor');
 
+      // Juicy Explosion (Core + Shockwave)
       function createExplosion(pos) {
-        const explosion = document.createElement('a-sphere');
-        explosion.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
-        explosion.setAttribute('radius', '0.05');
-        explosion.setAttribute('color', '#ff5500'); 
-        explosion.setAttribute('material', 'transparent: true; opacity: 1');
+        playSfx('explosion');
         
-        explosion.setAttribute('animation__scale', 'property: scale; to: 5 5 5; dur: 400; easing: easeOutQuad');
-        explosion.setAttribute('animation__fade', 'property: material.opacity; to: 0; dur: 400; easing: easeOutQuad');
+        // Inner Fiery Core
+        const core = document.createElement('a-sphere');
+        core.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
+        core.setAttribute('radius', '0.04');
+        core.setAttribute('color', '#ffffaa'); 
+        core.setAttribute('material', 'transparent: true; opacity: 1');
+        core.setAttribute('animation__scale', 'property: scale; to: 4 4 4; dur: 300; easing: easeOutQuad');
+        core.setAttribute('animation__fade', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
         
-        targetAnchor.appendChild(explosion);
+        // Outer Shockwave
+        const shockwave = document.createElement('a-sphere');
+        shockwave.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
+        shockwave.setAttribute('radius', '0.05');
+        shockwave.setAttribute('color', '#ff3300'); 
+        shockwave.setAttribute('material', 'transparent: true; opacity: 0.8; wireframe: true');
+        shockwave.setAttribute('animation__scale', 'property: scale; to: 8 8 8; dur: 450; easing: easeOutQuad');
+        shockwave.setAttribute('animation__fade', 'property: material.opacity; to: 0; dur: 450; easing: easeOutQuad');
+
+        targetAnchor.appendChild(core);
+        targetAnchor.appendChild(shockwave);
         
         setTimeout(() => {
-          if (explosion.parentNode) {
-            explosion.remove();
-          }
-        }, 400);
+          if (core.parentNode) core.remove();
+          if (shockwave.parentNode) shockwave.remove();
+        }, 500);
+      }
+
+      // Juicy Floating Text
+      function spawnFloatingText(x, y, textVal) {
+          const textEl = document.createElement('div');
+          textEl.className = 'floating-text';
+          textEl.innerText = textVal;
+          textEl.style.left = x + 'px';
+          textEl.style.top = y + 'px';
+          document.body.appendChild(textEl);
+          
+          setTimeout(() => {
+              textEl.remove();
+          }, 1000);
+      }
+
+      // Screen Shake & Flash
+      function triggerDamageFeedback() {
+          playSfx('damage');
+          const overlay = document.getElementById('damage-overlay');
+          overlay.style.opacity = '1';
+          
+          // Shake body wrapper
+          document.body.classList.remove('screen-shake');
+          void document.body.offsetWidth; // trigger reflow to restart animation
+          document.body.classList.add('screen-shake');
+          
+          setTimeout(() => {
+              overlay.style.opacity = '0';
+          }, 150);
       }
 
       function shootLaser(targetLocalPos) {
+        playSfx('shoot');
+        
         const startPoint = new THREE.Vector3(0.2, 0.05, 0);
         const endPoint = targetLocalPos; 
         
         const distance = startPoint.distanceTo(endPoint);
         const midPoint = new THREE.Vector3().addVectors(startPoint, endPoint).multiplyScalar(0.5);
         
-        const laser = document.createElement('a-cylinder');
-        laser.setAttribute('position', `${midPoint.x} ${midPoint.y} ${midPoint.z}`);
-        laser.setAttribute('radius', '0.015'); 
-        laser.setAttribute('height', distance);
-        laser.setAttribute('color', '#ff0000');
-        laser.setAttribute('material', 'shader: flat; opacity: 0.9');
+        // Solid thick core
+        const laserCore = document.createElement('a-cylinder');
+        laserCore.setAttribute('position', `${midPoint.x} ${midPoint.y} ${midPoint.z}`);
+        laserCore.setAttribute('radius', '0.015'); 
+        laserCore.setAttribute('height', distance);
+        laserCore.setAttribute('color', '#ffffff'); // White hot center
+        laserCore.setAttribute('material', 'shader: flat; opacity: 1');
+
+        // Glowing outer shell
+        const laserGlow = document.createElement('a-cylinder');
+        laserGlow.setAttribute('position', `${midPoint.x} ${midPoint.y} ${midPoint.z}`);
+        laserGlow.setAttribute('radius', '0.04'); 
+        laserGlow.setAttribute('height', distance);
+        laserGlow.setAttribute('color', '#ff0055'); // Red glow
+        laserGlow.setAttribute('material', 'shader: flat; opacity: 0.5; transparent: true');
 
         const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
         const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
@@ -339,14 +487,15 @@
         const rotY = THREE.MathUtils.radToDeg(euler.y);
         const rotZ = THREE.MathUtils.radToDeg(euler.z);
         
-        laser.setAttribute('rotation', `${rotX} ${rotY} ${rotZ}`);
+        laserCore.setAttribute('rotation', `${rotX} ${rotY} ${rotZ}`);
+        laserGlow.setAttribute('rotation', `${rotX} ${rotY} ${rotZ}`);
         
-        targetAnchor.appendChild(laser);
+        targetAnchor.appendChild(laserCore);
+        targetAnchor.appendChild(laserGlow);
         
         setTimeout(() => {
-          if (laser.parentNode) {
-            laser.remove();
-          }
+          if (laserCore.parentNode) laserCore.remove();
+          if (laserGlow.parentNode) laserGlow.remove();
         }, 150);
       }
 
@@ -359,7 +508,6 @@
         enemy.setAttribute('scale', '0.04 0.04 0.04');
         enemy.setAttribute('draw-edges', '');
         
-        // Add a random spinning animation to make it look like a tumbling asteroid
         const dur = 2000 + Math.random() * 3000;
         enemy.setAttribute('animation', `property: rotation; to: ${Math.random() * 360} 360 ${Math.random() * 360}; dur: ${dur}; loop: true; easing: linear`);
 
@@ -411,13 +559,25 @@
           
           shootLaser(hitPosition);
           createExplosion(hitPosition);
+          spawnFloatingText(e.clientX, e.clientY, "+10");
 
           enemyData.box.remove();
           if(enemyData.line) enemyData.line.remove(); 
           enemies.splice(hitIndex, 1);
           
           score += 10;
-          document.getElementById('score-val').innerText = score;
+          const scoreEl = document.getElementById('score-val');
+          scoreEl.innerText = score;
+          
+          // Pop animation on score box
+          const scoreBox = document.getElementById('score-box');
+          scoreBox.style.transform = "scale(1.2)";
+          scoreBox.style.background = "rgba(0, 255, 255, 0.3)";
+          setTimeout(() => {
+              scoreBox.style.transform = "scale(1)";
+              scoreBox.style.background = "rgba(0, 0, 0, 0.6)";
+          }, 100);
+
         } else {
           const clickPoint = new THREE.Vector3(clickX, clickY, 0.5);
           clickPoint.unproject(camera);
@@ -440,22 +600,18 @@
         const gameOverScreen = document.getElementById('game-over-screen');
         gameOverScreen.classList.remove('hidden');
 
-        // Reset visibility of end screen components
         document.getElementById('hs-form-section').classList.add('hidden');
         document.getElementById('hs-success-msg').classList.add('hidden');
         document.getElementById('hs-leaderboard-section').classList.add('hidden');
         document.getElementById('restart-btn').classList.add('hidden');
 
-        // Check if user is in Top 50
         const isTop50 = highScoresList.length < 50 || score > (highScoresList[49]?.score || 0);
 
         if (isTop50 && score > 0) {
-            // Prompt user for info
             document.getElementById('hs-name').value = '';
             document.getElementById('hs-email').value = '';
             document.getElementById('hs-form-section').classList.remove('hidden');
         } else {
-            // Did not make high scores, just show board & retry
             renderLeaderboard();
             document.getElementById('hs-leaderboard-section').classList.remove('hidden');
             document.getElementById('restart-btn').classList.remove('hidden');
@@ -474,6 +630,7 @@
              document.getElementById('health-val').innerText = health;
              
              createExplosion(enemyPos);
+             triggerDamageFeedback(); // Shake & Flash
 
              enemyData.box.remove();
              if(enemyData.line) enemyData.line.remove();
@@ -493,6 +650,7 @@
       }
 
       document.getElementById('start-btn').addEventListener('click', async () => {
+        initAudio(); // Required to unlock audio on first user gesture
         await sceneEl.systems["mindar-image-system"].start();
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('ui-container').classList.remove('hidden');
@@ -502,6 +660,7 @@
       });
 
       document.getElementById('restart-btn').addEventListener('click', () => {
+        initAudio(); 
         score = 0;
         health = 100;
         document.getElementById('score-val').innerText = score;
