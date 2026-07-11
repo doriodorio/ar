@@ -7,6 +7,23 @@
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     
+    <script>
+      // רכיב מיוחד שמצייר רק את קווי המתאר החיצוניים (ללא אלכסונים)
+      AFRAME.registerComponent('draw-edges', {
+        init: function () {
+          this.el.addEventListener('loaded', () => {
+            const mesh = this.el.getObject3D('mesh');
+            if (mesh) {
+              const edges = new THREE.EdgesGeometry(mesh.geometry);
+              const material = new THREE.LineBasicMaterial({ color: 0x000000 });
+              const lineSegments = new THREE.LineSegments(edges, material);
+              mesh.add(lineSegments);
+            }
+          });
+        }
+      });
+    </script>
+
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; background: #000; }
       #ui-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
@@ -25,7 +42,7 @@
   </head>
   <body>
 
-    <div id="version-display">גרסה: 1.2.1</div>
+    <div id="version-display">גרסה: 1.2.2</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -61,7 +78,7 @@
         <a-plane color="yellow" wireframe="true" width="1" height="1"></a-plane>
         <!-- קוביית הגבולות הלבנה להיווצרות אויבים -->
         <a-box color="white" position="0 0 0.75" scale="1.5 1.5 1.5" wireframe="true" opacity="0.3"></a-box>
-        <!-- אזור המטרה הירוק (מחליף את הכדור הכחול) ממוקם על הבניין -->
+        <!-- אזור המטרה הירוק -->
         <a-plane id="target-area" color="#00ff00" position="0.2 -0.2 0" width="0.4" height="0.5" opacity="0.5"></a-plane>
       </a-entity>
     </a-scene>
@@ -96,25 +113,19 @@
 
       // פונקציה לביצוע יריית הלייזר
       function shootLaser() {
-        // נקודת ההתחלה: האמצע של הקו העליון של המבנה (המשטח הירוק)
-        // המשטח נמצא במיקום y: -0.2 וגובה 0.5, ולכן החצי העליון שלו נמצא ב- y: 0.05 (-0.2 + 0.25)
         const startPoint = new THREE.Vector3(0.2, 0.05, 0);
         
-        // נקודת הסיום: מיקום המצלמה (הכוונת של השחקן)
         const cameraWorld = new THREE.Vector3();
         cameraEl.object3D.getWorldPosition(cameraWorld);
         
-        // אנו צריכים להמיר את מיקום המצלמה מהעולם למרחב המקומי של המטרה (Anchor)
         const endPoint = cameraWorld.clone();
         targetAnchor.object3D.worldToLocal(endPoint);
         
-        // יצירת קו הלייזר האדום
         const laser = document.createElement('a-entity');
         laser.setAttribute('line', `start: ${startPoint.x} ${startPoint.y} ${startPoint.z}; end: ${endPoint.x} ${endPoint.y} ${endPoint.z}; color: #ff0000; opacity: 1;`);
         
         targetAnchor.appendChild(laser);
         
-        // מחיקת הלייזר אחרי זמן קצר (אפקט של ירייה מהירה)
         setTimeout(() => {
           if (laser.parentNode) {
             laser.remove();
@@ -128,13 +139,10 @@
         const enemy = document.createElement('a-box');
         const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#aa44ff'];
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
-        enemy.setAttribute('scale', '0.075 0.075 0.075');
-        
-        const wireframe = document.createElement('a-entity');
-        wireframe.setAttribute('geometry', 'primitive: box');
-        wireframe.setAttribute('material', 'color: black; wireframe: true');
-        wireframe.setAttribute('scale', '1.02 1.02 1.02'); 
-        enemy.appendChild(wireframe);
+        // הקטנת הקוביות לגודל 0.06
+        enemy.setAttribute('scale', '0.06 0.06 0.06');
+        // שימוש ברכיב המיוחד שיצרנו למעלה כדי לצייר רק קווי מתאר חיצוניים
+        enemy.setAttribute('draw-edges', '');
 
         const startX = (Math.random() - 0.5) * 1.5;
         const startY = (Math.random() - 0.5) * 1.5;
@@ -157,10 +165,8 @@
 
       // מערכת כיוון ופגיעה (Screen-space targeting)
       window.addEventListener('click', (e) => {
-        // מניעת ירייה אם לחצנו על כפתור
         if(!isPlaying || e.target.tagName === 'BUTTON') return;
         
-        // הפעלת האפקט של הלייזר מהבניין
         shootLaser();
 
         const camera = cameraEl.getObject3D('camera');
@@ -199,12 +205,10 @@
              enemyData.line.remove();
              enemies.splice(i, 1);
              
-             // אם החיים נגמרו - סיום משחק
              if(health <= 0) {
                isPlaying = false;
                clearInterval(spawnIntervalId);
                
-               // עדכון והצגת מסך סיום המשחק
                document.getElementById('final-score').innerText = score;
                document.getElementById('ui-container').classList.add('hidden');
                document.getElementById('game-over-screen').classList.remove('hidden');
@@ -219,7 +223,6 @@
         requestAnimationFrame(gameLoop);
       }
 
-      // התחלת משחק בפעם הראשונה
       document.getElementById('start-btn').addEventListener('click', async () => {
         await sceneEl.systems["mindar-image-system"].start();
         document.getElementById('start-screen').classList.add('hidden');
@@ -229,22 +232,18 @@
         spawnIntervalId = setInterval(spawnEnemy, 1500);
       });
 
-      // התחלה מחדש של המשחק אחרי פסילה
       document.getElementById('restart-btn').addEventListener('click', () => {
-        // איפוס נתונים
         score = 0;
         health = 100;
         document.getElementById('score-val').innerText = score;
         document.getElementById('health-val').innerText = health;
         
-        // מחיקת כל האויבים שעל המסך
         enemies.forEach(e => {
           if (e.box.parentNode) e.box.remove();
           if (e.line.parentNode) e.line.remove();
         });
         enemies = [];
         
-        // החלפת חלוניות
         document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('ui-container').classList.remove('hidden');
         
