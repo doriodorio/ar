@@ -83,7 +83,7 @@
   </head>
   <body>
 
-    <div id="version-display">Version: 1.4.1</div>
+    <div id="version-display">Version: 1.4.2</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -96,7 +96,7 @@
     <div id="start-screen" class="screen">
       <div class="center-flex">
         <h1>DEFEND THE BUILDING</h1>
-        <p style="font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 5px;">Help us save our building! Tap the incoming cubes to laser them out of the sky.<br><br>Enter the high score list and get your special cup!</p>
+        <p style="font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 5px;">Help us save our building! Tap the incoming asteroids to laser them out of the sky.<br><br>Enter the high score list and get your special cup!</p>
         <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 15px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
         <button id="start-btn">START GAME</button>
       </div>
@@ -353,11 +353,15 @@
       function spawnEnemy() {
         if(!isPlaying) return;
         
-        const enemy = document.createElement('a-box');
-        const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#aa44ff'];
+        const enemy = document.createElement('a-dodecahedron');
+        const colors = ['#666666', '#8B7355', '#5C4033', '#4F4F4F', '#8B8378']; // Asteroid rock colors
         enemy.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
-        enemy.setAttribute('scale', '0.06 0.06 0.06');
+        enemy.setAttribute('scale', '0.04 0.04 0.04');
         enemy.setAttribute('draw-edges', '');
+        
+        // Add a random spinning animation to make it look like a tumbling asteroid
+        const dur = 2000 + Math.random() * 3000;
+        enemy.setAttribute('animation', `property: rotation; to: ${Math.random() * 360} 360 ${Math.random() * 360}; dur: ${dur}; loop: true; easing: linear`);
 
         const startX = (Math.random() - 0.5) * 1.5;
         const startY = (Math.random() - 0.5) * 1.5;
