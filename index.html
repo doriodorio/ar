@@ -137,7 +137,7 @@
     <!-- Juice Features Overlay -->
     <div id="damage-overlay"></div>
 
-    <div id="version-display">Version: 1.5.2 (Aligned Scan)</div>
+    <div id="version-display">Version: 1.5.3 (Final Polish)</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -194,9 +194,8 @@
       <!-- Smoothed Anchor. All objects will sit inside to move with the image -->
       <a-entity mindar-image-target="targetIndex: 0" id="target-anchor" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         
-        <!-- Wireframe bounding box to verify scan image size and position -->
-        <!-- Offset Y position so top matches target image top (0.5 for a 1:1 image) -->
-        <a-plane width="1" height="1.25" position="0 -0.125 0.015" material="color: #ffeb3b; wireframe: true;"></a-plane>
+        <!-- Wireframe bounding box to verify scan image size and position (Hidden for production) -->
+        <!-- <a-plane width="1" height="1.25" position="0 -0.125 0.015" material="color: #ffeb3b; wireframe: true;"></a-plane> -->
 
         <!-- Static neon image with the animated scanning mask shader -->
         <!-- Offset Y position so top matches target image top (0.5 for a 1:1 image) -->
