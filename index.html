@@ -130,6 +130,26 @@
           30%, 50%, 70% { transform: translate3d(-10px, 0, 0) rotate(-2deg); }
           40%, 60% { transform: translate3d(10px, 0, 0) rotate(2deg); }
       }
+      
+      /* Instructions Box */
+      .instructions-box {
+          font-size: 1.1rem;
+          max-width: 90%;
+          line-height: 1.5;
+          margin-bottom: 15px;
+          text-align: left;
+          background: rgba(0,0,0,0.6);
+          padding: 15px 20px;
+          border-radius: 12px;
+          border: 2px solid #ffeb3b;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      }
+      .instruction-step {
+          margin-bottom: 12px;
+      }
+      .instruction-step:last-child {
+          margin-bottom: 0;
+      }
     </style>
   </head>
   <body>
@@ -137,7 +157,7 @@
     <!-- Juice Features Overlay -->
     <div id="damage-overlay"></div>
 
-    <div id="version-display">Version: 1.5.3 (Final Polish)</div>
+    <div id="version-display">Version: 1.5.4 (Instructions Update)</div>
 
     <div id="ui-container" class="hidden">
       <div id="stats-bar">
@@ -149,9 +169,15 @@
     <!-- Start Screen -->
     <div id="start-screen" class="screen">
       <div class="center-flex">
-        <h1 style="text-shadow: 0 0 20px #ffeb3b;">DEFEND THE BUILDING</h1>
-        <p style="font-size: 1.2rem; max-width: 80%; line-height: 1.5; margin-bottom: 5px;">Help us save our building! Tap the incoming asteroids to laser them out of the sky.<br><br>Enter the high score list and get your special cup!</p>
-        <p style="font-size: 1rem; color: #ffeb3b; max-width: 80%; margin-top: 15px; line-height: 1.4;">This is an AR game please OK the use of the camera, if nothing works, try to refresh.</p>
+        <h1 style="text-shadow: 0 0 20px #ffeb3b; margin-bottom: 20px;">DEFEND THE BUILDING</h1>
+        
+        <div class="instructions-box">
+            <div class="instruction-step">🎥 <strong>1.</strong> Allow camera access and <strong>look directly at the building</strong> on the back of the booth.</div>
+            <div class="instruction-step">☄️ <strong>2.</strong> Save the building from a storm of asteroids! <strong>Tap the asteroids</strong> to laser them out of the sky.</div>
+            <div class="instruction-step">🏆 <strong>3.</strong> Make it into the high score list and <strong>get a gift cup!</strong></div>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: #aaa; max-width: 80%; margin-top: 10px; line-height: 1.4;">(If the camera doesn't load, try refreshing the page)</p>
         <button id="start-btn">START GAME</button>
       </div>
     </div>
